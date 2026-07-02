@@ -81,6 +81,10 @@ to the skill).
   from sediment's stale length and duplication's repeated length). Already handled by
   `body-quality-checklist.md` (size / splitting) + `structure-surgery.md` (disclose
   reference behind pointers, split by branch / sequence). Just label it `[sprawl]`.
+- **Runtime-contract labels** — `[no-floor]` (no mandatory minimal read-set), `[gate-gap]`
+  (quality gates never fire on the common task size), `[missing-license]` (skill needs
+  deeper edits than the environment's surgical-edit default allows, grants no explicit
+  authority). Defined in `runtime-contract.md`; just label.
 
 ## Using these in the diagnosis
 

@@ -4,125 +4,257 @@ English | [简体中文](README.zh-CN.md)
 
 # skill-doctor
 
-<img src="assets/hero.png" alt="skill-doctor — diagnostics for AI agent skills: trigger reliability, routing, package structure" width="640" />
+**Reviews your Claude skills so they actually trigger, stay lean, and route cleanly.**
 
-**Give your skill a solid structure.**
+![Claude Skill](https://img.shields.io/badge/Claude-Skill-8A2BE2)
+![Deterministic checks](https://img.shields.io/badge/checks-4%20deterministic-2ea44f)
+![References](https://img.shields.io/badge/references-18%20on--demand-blue)
+![Runtime deps](https://img.shields.io/badge/runtime%20deps-none-success)
+![Python](https://img.shields.io/badge/python-3-3776AB)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Works on](https://img.shields.io/badge/works_on-Claude_Code_·_Codex_·_Hermes_·_OpenClaw-blueviolet.svg)]()
-[![Core checks](https://img.shields.io/badge/core_checks-no_API_key-2ea44f.svg)]()
+A skill that audits other skills. It settles the things a machine can settle — character counts, broken routes, listing budget — with scripts and exit codes, and saves your attention for the calls that need judgment: dead instructions, bloat, exit conditions too vague to act on. Every defect it reports has a name and a line number.
+
+[See it run](#see-it-run) · [Quick start](#quick-start) · [What it catches](#what-it-catches) · [How it works](#how-it-works) · [Reference](#reference)
 
 </div>
 
 ---
 
-## Features
+## See It Run
 
-1. Tackles bloated skill docs and uneven information distribution
-2. Audits your skill's docs against the spec and flags which files to split
-3. Draws on the LLM-wiki index pattern so every file stays reachable by routing
-4. Grounds every check it makes in Anthropic's official spec and best practices
-5. Verifies your skill will be recognized and invoked inside a crowded global setup
+A real diagnosis, lightly trimmed:
 
----
+```text
+$ "review my image-tool skill"
 
-## What It Is
+[skill-doctor] Auditing: ~/.claude/skills/image-tool  body=143 lines  description=52 chars
+[skill-doctor] Budget: 32 skills installed, 11,515 chars vs ≈40,000 → fits
+[skill-doctor] Dry-run prompt: "use image-tool to convert this"  broken links=1
 
-skill-doctor is a skill that audits the skills you write. You write a skill, but you can't tell whether the model will trigger it when it should, read the body in full, or find the right reference file. These failures never throw an error, so you never notice them. skill-doctor finds them one by one, sorts them by severity, explains why each one is a problem and how to fix it, and edits your files only after you say so. It only reshapes structure, never behavior: it reorganizes your skill into a cleaner, more standard layout, but what the skill does and how it does it stay exactly the same. It's for anyone who writes their own skills.
+[skill-doctor] Diagnosis
 
-Two things it accounts for that are easy to miss:
+❌ Must fix (P0→P3)
+  [P0 effect break]  Step 3 reads "the output file" but Step 2 never names one
+                     → have Step 2 write a named artifact Step 3 can pick up
+  [P1 structure]     description is first person ("I help you resize…")
+                     → rewrite in third person ("Resizes and converts images…")
+  [P2 specificity]   "process the image" has no command
+                     → "convert to PNG with `sips -s format png`"
 
-1. **API key** — verification runs in a clean environment, isolated from your current context, so the test reflects the fix.
-2. **Your model's context size** — skill-doctor sums the descriptions of all your skills and checks whether that load makes the one you're testing fail to trigger.
+⚠️ Suggested
+  - [no-op] "be careful and thorough" — the model already is → delete the line
+  - [sprawl] body 143 lines; a 40-line example block → move to references/
 
----
-
-## See It in Action
-
-```
-You: check this skill for me
-
-skill-doctor:
-
-Audit complete — 3 problems:
-
-1. The description runs 1,100 characters — too long
-   → it loads into context every time and takes up your budget;
-     a few hundred characters is plenty
-
-2. SKILL.md is 680 lines — over the limit
-   → move some detail into references/ so it loads on demand,
-     instead of being read in full every time
-
-3. One file in references/ is never reached (an orphan)
-   → wire it into the routing, or delete it
-
-Want me to fix these? (I won't touch your files until you say so)
+✅ Passed
+  - name regex, routing (0 orphans / 0 dangling), YAML, visible output per step
 ```
 
+Here's the thing about a broken skill: nothing throws. It just doesn't fire, or Claude reads half of it and quietly moves on. You find out weeks later when the skill you wrote never once triggered. This is the pass that catches that before you ship.
+
 ---
 
-## Repository Structure
+## Quick Start
+
+Point it at any skill — in a Claude session, just ask:
+
+```
+review this skill   ·   审查 / 体检 / 修复 this skill   ·   "check my-tool"
+```
+
+Or run one deterministic check straight from the shell, no Claude needed:
+
+```bash
+python3 scripts/check_routes.py ~/.claude/skills/my-tool
+# exit 0 = clean · exit 1 = orphans / dangling links / over the size cap
+```
+
+It reads the target, runs the mechanical checks, walks one real prompt through the workflow, and prints a P0→P3 report. It does **not** touch your files until you say "fix it".
+
+---
+
+## What It Catches
+
+The failures that don't announce themselves:
+
+| Symptom you'd never notice | What it flags |
+| :--- | :--- |
+| Skill never auto-fires | description in first person, too weak, or over the listing budget (silently dropped to name-only) |
+| Claude skips half your instructions | body past ~500 lines — `[sprawl]` |
+| A reference file never gets read | orphan or dangling route, caught by `check_routes.py` |
+| A workflow step gets skipped | the step prints nothing, so the model walks past it |
+| The agent quits a step early | exit condition too vague — `[premature-completion]` |
+| A line that does nothing | the model already obeyed it by default — `[no-op]` |
+
+Every check, threshold, and rule is listed in full under [Reference](#reference).
+
+---
+
+## How It Works
+
+```text
+  your skill  (SKILL.md + references/ + scripts/)
+        |
+        v
+  mechanical checks ........ char / line counts · listing budget
+  (scripts, exit-coded)      routing reachability · retrieval eval
+        |
+        v
+  judgment .................. bloat · no-op · sediment · vague exits
+  (dimensions, on demand)    loaded only when their condition fires
+        |
+        v
+  dry-run ................... walk one real prompt through the workflow
+        |
+        v
+  P0 -> P3 report .......... must-fix / suggested / passed, each with a line number
+        |
+        v
+  apply fixes .............. only after you confirm
+```
+
+Two design choices make the verdict worth trusting:
+
+- **Deterministic where it can be.** Counts, routing, and budget are settled by scripts that return exit codes, not by an opinion that drifts between runs.
+- **Honest where it can't.** If skill-doctor already edited your skill earlier in the same session, it stamps every line of its report `[self-review]` and tells you to re-check with a fresh agent. It discounts its own grade on purpose.
+
+<!-- ============ Reference — skip unless you're looking something up ============ -->
+
+---
+
+## Reference
+
+Everything below is lookup material. You don't need to read it to use the skill.
+
+### Diagnosis flow
+
+| Step | Does | Output |
+| :--- | :--- | :--- |
+| 1 | Read the target SKILL.md; run `check_listing_budget.py` and `check_routes.py` | size + budget + routes verdicts |
+| 2 | `index.py` rosters every dimension (FORCED / DEFAULT / SKIP, plus a `MODE=` dispatch line); read the fired ones one file at a time | the roster + one receipt per dimension |
+| 2.5 | Dry-run: walk one prompt per task shape (write / revise / check) through the body | broken links + gates fired per prompt (any break → P0) |
+| 2.6 | Live-injection: is the target's description actually injected this session, or dropped name-only | injected / dropped / skipped |
+| 3 | Print the P0→P3 diagnosis (❌ must fix · ⚠️ suggested · ✅ passed) | the report |
+| 4 | Apply fixes with Edit — only after you confirm | applied-fixes line |
+
+### Bundled scripts
+
+No LLM and no third-party dependencies (except `eval_retrieval.py`, which calls a model on request).
+
+| Script | Checks | Command | Exit |
+| :--- | :--- | :--- | :--- |
+| `index.py` | measures the target and prints the dimension roster (FORCED / DEFAULT / SKIP with reasons) plus the `MODE=` dispatch line | `python3 scripts/index.py <skill_dir>` | 0 roster printed / 2 unreadable |
+| `check_routes.py` | reachability, orphans, dangling links, the 6000-char compass cap; `--before <snapshot>` adds a content-conservation check | `python3 scripts/check_routes.py <skill_dir>` | 0 clean / 1 issues |
+| `check_listing_budget.py` | total description chars vs the ~1%-of-context listing pool; lists every description over the 300-char band | `python3 scripts/check_listing_budget.py <root>` | 0 fits / 1 overflow / 2 unavailable |
+| `check_desc_slim.py` | flags descriptions that can be trimmed without losing trigger strength | `python3 scripts/check_desc_slim.py <skill_dir>` | 0 clean / 1 issues |
+| `eval_retrieval.py` | asks a model (GLM, 3× majority vote) whether the router can find each reference by its `when-to-read` scenario | `python3 scripts/eval_retrieval.py <skill_dir> --glm` | 0 clean / 1 misses |
+
+### Hard rules
+
+A violation here is an error, not a suggestion.
+
+| Rule | Source |
+| :--- | :--- |
+| description ≤ 1024 chars (Claude Code ≥ 2.1.105 accepts 1536) | Anthropic spec / CC release notes |
+| listing-budget overflow is always reported — it is a population fact, fixed by a global pass, never by editing one skill | CC issues #56710 / #47627 |
+| description in third person | Anthropic best practices |
+| name uses only lowercase letters, digits, hyphens | Anthropic spec |
+| body < 500 lines | Anthropic / community consensus |
+| routing depth ≤ 2 hops (SKILL.md → index.md → file); nested indexes forbidden | structure-surgery (hardened from practice) |
+| zero dangling routes, zero orphan subdocuments | structure-surgery iron rule |
+| description on a single logical YAML line (no `>` or `|`) | Prettier reflow breaks it |
+| every workflow step produces visible output | Seleznov experiment |
+| a skill's claim about its own performance must point to in-repo evidence, or be cut | evidence-gating |
+
+### Failure modes it names
+
+A defect gets a name so you can act on it precisely; the P-tier says how bad, the name says what kind.
+
+- `[no-op]` — a line the model already obeys by default
+- `[sediment]` — a stale line that drifted out of relevance
+- `[sprawl]` — simply too long, even if every line is live
+- `[duplication]` — the same meaning in more than one place
+- `[premature-completion]` — an exit condition so vague the agent quits early
+- `[weak-leading-word]` — an anchor word too weak to beat the model's default
+- `[no-floor]` — no mandatory read-set, so audit depth varies run to run
+- `[gate-gap]` — quality gates keyed only to big tasks; the everyday small edit passes zero gates
+- `[missing-license]` — an editing skill that never grants rewrite authority, so the model's minimal-diff default wins
+
+### Priority tiers
+
+| Tier | Meaning | Enters ❌ |
+| :--- | :--- | :--- |
+| **P0** | effect break (the flow doesn't connect when run) | always |
+| **P1** | violates a structural hard rule | always |
+| **P2** | insufficient specificity (no command, no I/O spec) | always |
+| **P3** | readability | only when it changes what the next run does; else ⚠️ |
+
+### Dimensions (rostered on demand by `scripts/index.py`)
+
+`scripts/index.py` decides which dimension files fire (FORCED / DEFAULT / SKIP); workflow docs load at the step that names them. `references/index.md` stays the human-readable mirror.
+
+| Reference | Covers |
+| :--- | :--- |
+| `description-templates.md` | trigger-strength template + listing-budget math |
+| `body-quality-checklist.md` | body size and what to demote into references |
+| `visible-output-rule.md` | every workflow step must print something |
+| `yaml-pitfalls.md` | frontmatter formatting traps |
+| `hard-code-vs-llm-judgment.md` | script it, or leave it to the model |
+| `assets-vs-references.md` | sorting templates vs reference docs |
+| `structure-surgery.md` | splitting, routing tiers, the 2-hop cap |
+| `effect-dry-run.md` | walking one prompt per task shape through the workflow |
+| `runtime-contract.md` | load floor, gate granularity, edit license: whether the skill still takes effect when it actually runs |
+| `priority-tiers.md` | P0–P3 definitions and placement |
+| `predictability-glossary.md` | the failure-mode vocabulary |
+| `hard-rules.md` | the quantified must-pass rules |
+| `exception-fallback.md` | what to do when a path or script errors |
+| `language-policy.md` | English-by-default and its exceptions |
+| `output-format.md` | the layered shape of the Step 3 report |
+| `apply-safety.md` | size gate, pre-deletion check, closing the loop |
+| `live-injection-check.md` | is the description actually injected this session |
+| `rationale.md` | why the skill exists at all |
+
+### Repository structure
 
 ```text
 skill-doctor/
-├── SKILL.md                          # the compass: diagnosis flow + routing
-├── GETTING_STARTED.md                # one-time agent-driven setup (delete after)
-├── references/                       # judgment dimensions, loaded on demand
-│   ├── index.md                      # routes to every dimension by when-to-read
-│   ├── apply-safety.md               # size gate, pre-deletion check, closing the loop
-│   ├── assets-vs-references.md       # sorting templates vs reference docs
-│   ├── body-quality-checklist.md     # body size and what to demote into references
-│   ├── description-templates.md      # trigger-strength template + listing-budget math
-│   ├── effect-dry-run.md             # walking one prompt through the workflow
-│   ├── exception-fallback.md         # what to do when a path or script errors
-│   ├── hard-code-vs-llm-judgment.md  # script it, or leave it to the model
-│   ├── hard-rules.md                 # the quantified must-pass rules
-│   ├── language-policy.md            # English-by-default and its exceptions
-│   ├── live-injection-check.md       # is the description actually injected this session
-│   ├── output-style.md               # how skill-doctor talks to the human
-│   ├── predictability-glossary.md    # the failure-mode vocabulary
-│   ├── priority-tiers.md             # P0–P3 definitions and placement
-│   ├── rationale.md                  # why the skill exists at all
-│   ├── structure-surgery.md          # splitting, routing tiers, the 2-hop cap
-│   ├── visible-output-rule.md        # every workflow step must print something
-│   └── yaml-pitfalls.md              # frontmatter formatting traps
-├── scripts/                          # deterministic checks, no LLM (except eval_retrieval)
-│   ├── detect_platform.py            # which platform + its listing-budget rule
-│   ├── check_routes.py               # reachability / orphans / dangling / compass cap
-│   ├── check_listing_budget.py       # listing-budget across platforms
-│   ├── check_desc_slim.py            # description-shortening gate
-│   └── eval_retrieval.py             # optional LLM routing-recall vote (bring your own key)
-├── assets/
-│   └── hero.png                      # README hero image
-├── LICENSE                           # MIT
-├── README.md                         # this file (English)
-└── README.zh-CN.md                   # Chinese version
+├── SKILL.md                              # the compass: diagnosis flow + routing
+├── references/
+│   ├── index.md                          # routes to every dimension by when-to-read
+│   ├── apply-safety.md
+│   ├── assets-vs-references.md
+│   ├── body-quality-checklist.md
+│   ├── description-templates.md
+│   ├── effect-dry-run.md
+│   ├── exception-fallback.md
+│   ├── hard-code-vs-llm-judgment.md
+│   ├── hard-rules.md
+│   ├── language-policy.md
+│   ├── live-injection-check.md
+│   ├── output-format.md
+│   ├── predictability-glossary.md
+│   ├── priority-tiers.md
+│   ├── rationale.md
+│   ├── runtime-contract.md
+│   ├── structure-surgery.md
+│   ├── visible-output-rule.md
+│   └── yaml-pitfalls.md
+├── scripts/
+│   ├── index.py                          # dimension roster: FORCED / DEFAULT / SKIP + MODE=
+│   ├── check_routes.py                   # reachability / orphans / dangling / compass cap
+│   ├── check_listing_budget.py           # description listing-budget
+│   ├── check_desc_slim.py                # description slimming
+│   └── eval_retrieval.py                 # retrieval eval (model-backed)
+├── README.md
+├── README.zh-CN.md
+└── LICENSE
 ```
 
 ---
 
-## Install
-
-**Easiest — let the agent install it.** Clone the repo, open it in your agent (Claude Code / Codex / Hermes / OpenClaw), and say *"set up skill-doctor"*. It detects your platform, installs into the right skills folder, and you can delete `GETTING_STARTED.md` afterward.
-
-**Manual** — a skill installs by living in your skills folder:
-
-```bash
-git clone https://github.com/Zane456/skill-doctor.git ~/.claude/skills/skill-doctor
-# Codex / OpenClaw: ~/.agents/skills/skill-doctor    Hermes: ~/.hermes/skills/skill-doctor
-```
-
-The scripts run on Python 3 with no dependencies, and the core checks need no API key. To turn on the optional, deeper AI check, point it at any OpenAI-compatible provider with your own key:
-
-```bash
-export EVAL_LLM_BASE_URL=https://api.deepseek.com
-export EVAL_LLM_MODEL=deepseek-v4-flash
-export EVAL_LLM_API_KEY=sk-...
-```
-
 <div align="center">
 
-MIT License © [Zane456](https://github.com/Zane456)
+*Skills fail silently. This is the pass that makes them fail loudly first.*
+
+**Author:** [Zane456](https://github.com/Zane456) · **License:** [MIT](LICENSE)
 
 </div>

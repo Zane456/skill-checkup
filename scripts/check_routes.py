@@ -68,6 +68,13 @@ def extract_refs(text: str):
     - Placeholder/glob tokens (containing * < >) are ignored.
     """
     body = strip_fences(text)
+    # Neutralize stray/unbalanced fence markers: an inline run of 3+ backticks used to
+    # *describe* a fenced block (e.g. prose telling the author to use a 'text' code
+    # block) survives FENCE_RE — which only strips *paired* fences — and then misaligns
+    # INLINE_CODE_RE pairing for the entire rest of the document. That silently corrupts
+    # every later backtick route (false orphans) and exposes example links sitting inside
+    # code spans (false dangling). Collapse the leftover runs before pairing inline code.
+    body = re.sub(r"`{3,}", " ", body)
     inline_spans = INLINE_CODE_RE.findall(body)
     body_no_code = INLINE_CODE_RE.sub(" ", body)
     refs = []

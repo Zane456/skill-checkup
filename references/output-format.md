@@ -33,8 +33,8 @@ own name, role/tool names — keep their original form; and the language-neutral
 ✅/🤔/❌/⚠️). Everything else follows the reply language.
 
 Auto-clarity exception (drop compression here): irreversible-fix warnings and any multi-step fix
-sequence where fragment order could be misread — write those in normal prose. (Compression is
-dropped for safety warnings and ordered sequences — clarity wins over brevity there.)
+sequence where fragment order could be misread — write those in normal prose. (Mirrors the global
+rule: drop compression for safety warnings and ordered sequences.)
 
 ## Section order (top → bottom)
 

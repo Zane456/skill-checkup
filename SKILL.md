@@ -9,58 +9,59 @@ Diagnose and improve any SKILL.md. **A compass, not a manual** — the concrete 
 
 ## Diagnosis flow after triggering (each step must produce visible output)
 
-> A step with no visible output gets silently skipped (Seleznov experiment, 2026). Print one confirmation line per step.
-> **Self-review flag**: if this session has already Edited/Written the target SKILL.md, **prefix every doctor print line with `[self-review]`**, and append one line at the end of Step 3: "conclusion is self-assessed, recommend re-reviewing with a fresh sub-agent." Credibility is discounted, visibility is forced.
+> Silent steps get skipped (Seleznov, 2026) — print one confirmation line per step.
+> **Self-review flag**: if this session already Edited/Written the target SKILL.md, **prefix every doctor print line with `[self-review]`** and end Step 3 with "conclusion is self-assessed; recommend a fresh sub-agent re-review."
 
-### Step 1: Read the target SKILL.md, announce the diagnosis start
+### Step 1: Read the target, run both checkers
 
-Read the full text of the SKILL.md being edited, run `python3 <this-skill-dir>/scripts/check_listing_budget.py "<project_root>"` (quote the path — spaces are common), print two lines:
+Read the target SKILL.md in full, then run both checkers (quote paths — spaces are common): `python3 <this-skill-dir>/scripts/check_listing_budget.py "<project_root>"` and `python3 <this-skill-dir>/scripts/check_routes.py "<skill_dir>"`. check_routes runs on EVERY audit; compass-cap / dangling / orphan hits are P1 findings. Print three lines:
 ```
 [skill-doctor] Auditing: <path>  body=<N> lines  description=<M> chars
-[skill-doctor] Budget (<platform>): <K> skills, <T> chars vs ≈<B> → <fits | OVERFLOW ×N.N>
+[skill-doctor] Budget: <K> skills installed, descriptions <T> chars vs ≈<B> → <fits | OVERFLOW ×N.N>
+[skill-doctor] Routes: <PASS | N issue(s): compass-over/dangling/orphan>
 ```
-Auto-detects platform (CC / Codex / Hermes / OpenClaw). Exit: 0 = fits; 1 = overflow; 2 = unavailable (no platform / context unknown → ask the user's platform + window). **Overflow is a population-level NOTICE, not a finding against the audited skill**: print the numbers so the user knows, but do NOT shorten this skill's description for budget reasons — slimming is a global pass, never a single-skill fix.
+Budget exit 2 = unavailable → fallback row. **Overflow = population-level NOTICE, never a reason to shorten this skill's description** (slimming = user-run global pass).
 
-### Step 2: Judge against the dimensions
+### Step 2: Roster the dimensions, then read ONE at a time
 
-Pick the dimensions to load from the [reference index](references/index.md) (**Dimensions** section) — read **only** the entries whose *when-to-read* fires.
-After loading, print one line:
+Run `python3 <this-skill-dir>/scripts/index.py "<skill_dir>"` — it measures the target and prints the dimension roster (FORCED / DEFAULT / SKIP + reasons) plus a `MODE=` line. The script is authoritative for firing; `references/index.md` is its human-readable mirror — don't re-judge firing from prose.
+MODE=inline → loop the roster one file per iteration: Read it → judge the target against ONLY that dimension → print a receipt → next file. Skipping a DEFAULT entry requires citing the roster's printed skip condition. MODE=fanout → `runtime-contract.md` §4.
 ```
-[skill-doctor] Loaded: <list>;  Skipped: <list with one-word reason>
+[skill-doctor] <dimension>: <N> findings
 ```
 
-### Step 2.5: Dry-run walkthrough (only when body contains a workflow)
+### Step 2.5: Dry-run walkthrough (when index.py reports ordered-steps=True)
 
-Following `references/effect-dry-run.md`, take the 1 most typical prompt and walk it through the body steps, checking whether input/instruction/output connect.
-Any broken link or ambiguity → mark **P0** (effect problem) and put it in the Code layer (P0 bucket) of Step 3.
-Print one line:
+Following `references/effect-dry-run.md`, take one typical prompt PER task shape the description promises (write / revise / check, 1–3; small-scope revise prompt mandatory for editing skills). Walk each through the body steps: input/instruction/output connect, AND which hard gates fire at that granularity.
+Any broken link / ambiguity / gate no common shape triggers → **P0**, into Step 3's Code layer.
+Print one line per prompt:
 ```
-[skill-doctor] Dry-run prompt: "<prompt>"  broken links=<N>
+[skill-doctor] Dry-run "<prompt>" (shape: <write|revise|check>)  broken links=<N>  gates fired=<M>/<total>
 ```
-If the body has no workflow (pure rule / reference-type skill), print:
+No ordered process at all (pure rule / reference skill) → print:
 ```
 [skill-doctor] Dry-run: skipped (no workflow)
 ```
 
 ### Step 2.6: Live-injection check (only when the target skill is in the current session's scope)
 
-Check whether the target appears in this session's available-skills list **with its description** (not name-only). The 3 cases (injected / name-only budget-drop / out-of-scope skip) and the population-notice rule are in `references/live-injection-check.md`. Print one line:
+Does the target appear in this session's available-skills list **with its description** (not name-only)? 3 cases + population-notice rule → `references/live-injection-check.md`. Print one line:
 ```
 [skill-doctor] Live-injection: <injected | DROPPED (name-only) | skipped (<reason>)>
 ```
 
 ### Step 3: Output the diagnosis report
 
-Present per `references/output-format.md` — a **layered report in lesstoken style, in the user's reply language**: verdict → quality scores → **Code layer** (P0→P3 findings with file:line/field — the evidence) → **Decision layer** split **✅ Safe to fix now** vs **🤔 Needs your decision** → closing question. Actionable parts last.
+Present per `references/output-format.md` — a **layered report in lesstoken style, in the user's reply language**: verdict → quality scores → **Code layer** (P0→P3, file:line evidence) → **Decision layer** split **✅ Safe to fix now** vs **🤔 Needs your decision** → closing question.
 
 Substance that fills the layers:
-- Each finding: stable ID (`P0-1` …), a **specific line number or field** (no vagueness), risk circle 🟢/🟡/🔴, sorted P0→P3 (`references/priority-tiers.md`). Same violation in N places → **N separate findings**, never merge.
-- **Name the failure mode** when one applies (`references/predictability-glossary.md`): prefix `[no-op]`/`[sediment]`/`[premature-completion]`/`[weak-leading-word]`/`[duplication]`/`[sprawl]`. Prefix = what kind, P-tier = how bad; never replaces the tier.
+- Each finding: stable ID (`P0-1` …), specific line/field, risk 🟢/🟡/🔴, sorted P0→P3 (`references/priority-tiers.md`); same violation in N places = N separate findings; the same defect reported by two dimensions = dedup to one before tiering.
+- **Name the failure mode** when one applies — a `predictability-glossary.md` label: `[no-op]`/`[sediment]`/`[premature-completion]`/`[weak-leading-word]`/`[duplication]`/`[sprawl]`/`[no-floor]`/`[gate-gap]`/`[missing-license]`. Prefix = what kind, P-tier = how bad.
 - Each 🤔 item separates **mechanism** (how the skill behaves now) from **consequence** (what the next LLM does wrong at run time), then options + rec.
 
 ### Step 4: Apply with Edit after user confirmation
 
-**Never** Edit without confirmation. Wait for the user to say "fix it" before acting.
+**Never** Edit without confirmation — wait for the user's "fix it".
 
 Before acting, apply the **size gate** and the **pre-deletion check**; afterwards **close the loop** — full procedure in `references/apply-safety.md`.
 After fixing, print one line:
@@ -70,19 +71,19 @@ After fixing, print one line:
 
 ## Hard rules quick reference
 
-The quantified hard rules (a violation is an error, not a suggestion) live in `references/hard-rules.md` — consult on every audit.
+Quantified hard rules (a violation is an error, not a suggestion) → `references/hard-rules.md`, consult on every audit.
 
 ## Exception fallback
 
-When a path is missing, YAML won't parse, or a bundled script (`scripts/check_listing_budget.py` + `scripts/detect_platform.py` / `scripts/check_routes.py` / `scripts/eval_retrieval.py` / `scripts/check_desc_slim.py`) is missing or exits 2 — handle per `references/exception-fallback.md`. Announce the exception to the user first; never silently skip.
+When a path is missing, YAML won't parse, or a bundled script (`scripts/index.py` `scripts/check_listing_budget.py` `scripts/check_routes.py` `scripts/eval_retrieval.py` `scripts/check_desc_slim.py`) is missing or exits 2 — handle per `references/exception-fallback.md`; announce first, never silently skip.
 
-## Output & language
+## Language: default to English
 
-Report prose follows `references/output-style.md` (clear, terminal-safe, conclusion-first). Body/references default to English; flag unjustified non-English ⚠️ — policy + the two justified exceptions in `references/language-policy.md`.
+Body and references default to English; flag unjustified non-English as ⚠️. Policy + the two justified exceptions → `references/language-policy.md`.
 
 ## Out of scope for this skill
 
-- Whether the actual **functionality** is correct (that is a logic bug, not a skill-form problem)
+- Domain correctness of the skill's content (a logic bug, not skill form; runtime *behavior* IS in scope → `runtime-contract.md`)
 - Project-specific conventions (those go in CLAUDE.md, not a skill)
 - One-off fix scripts (discarded after running once, should not be a skill)
 
