@@ -187,11 +187,17 @@ def check_compass(root: Path):
     skill_md = root / "SKILL.md"
     if not skill_md.exists():
         return [f"[missing] SKILL.md not found in {root}"]
-    n = len(skill_md.read_text(encoding="utf-8"))
-    status = "ok" if n <= COMPASS_CAP else "OVER"
-    print(f"  SKILL.md = {n} chars (cap {COMPASS_CAP}) [{status}]")
-    if n > COMPASS_CAP:
-        issues.append(f"[compass-over] SKILL.md is {n} chars, over the {COMPASS_CAP} hard cap — demote content into references/")
+    text = skill_md.read_text(encoding="utf-8")
+    n = len(text)
+    cap = COMPASS_CAP
+    m = re.search(r"(?m)^\s*compass-cap:\s*(\d+)", text[:2000])
+    if m:
+        cap = int(m.group(1))
+        print(f"  compass-cap override: {cap} (frontmatter, owner-granted)")
+    status = "ok" if n <= cap else "OVER"
+    print(f"  SKILL.md = {n} chars (cap {cap}) [{status}]")
+    if n > cap:
+        issues.append(f"[compass-over] SKILL.md is {n} chars, over the {cap} hard cap — demote content into references/")
     return issues
 
 

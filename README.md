@@ -143,7 +143,7 @@ No LLM and no third-party dependencies (except `eval_retrieval.py`, which calls 
 | Script | Checks | Command | Exit |
 | :--- | :--- | :--- | :--- |
 | `index.py` | measures the target and prints the dimension roster (FORCED / DEFAULT / SKIP with reasons) plus the `MODE=` dispatch line | `python3 scripts/index.py <skill_dir>` | 0 roster printed / 2 unreadable |
-| `check_routes.py` | reachability, orphans, dangling links, the 6000-char compass cap; `--before <snapshot>` adds a content-conservation check | `python3 scripts/check_routes.py <skill_dir>` | 0 clean / 1 issues |
+| `check_routes.py` | reachability, orphans, dangling links, the compass cap (6000 chars, overridable via a `compass-cap:` frontmatter field); `--before <snapshot>` adds a content-conservation check | `python3 scripts/check_routes.py <skill_dir>` | 0 clean / 1 issues |
 | `check_listing_budget.py` | total description chars vs the ~1%-of-context listing pool; lists every description over the 300-char band | `python3 scripts/check_listing_budget.py <root>` | 0 fits / 1 overflow / 2 unavailable |
 | `check_desc_slim.py` | flags descriptions that can be trimmed without losing trigger strength | `python3 scripts/check_desc_slim.py <skill_dir>` | 0 clean / 1 issues |
 | `eval_retrieval.py` | asks a model (GLM, 3× majority vote) whether the router can find each reference by its `when-to-read` scenario | `python3 scripts/eval_retrieval.py <skill_dir> --glm` | 0 clean / 1 misses |

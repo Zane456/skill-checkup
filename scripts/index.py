@@ -44,6 +44,8 @@ def measure(target: Path) -> dict:
         fm, body = m.group(1), raw[m.end():]
     dm = re.search(r"(?m)^description:\s*(.+)$", fm)
     desc = dm.group(1).strip() if dm else ""
+    cm = re.search(r"(?m)^\s*compass-cap:\s*(\d+)", fm)
+    cap = int(cm.group(1)) if cm else 6000
     refs = target / "references"
     ref_md = sorted(refs.glob("**/*.md")) if refs.is_dir() else []
     ref_bytes = sum(f.stat().st_size for f in ref_md)
@@ -55,7 +57,7 @@ def measure(target: Path) -> dict:
     gates = bool(re.search(GATE_PATTERN, body))
     return {
         "body_chars": len(body), "body_lines": body.count("\n") + 1,
-        "desc_chars": len(desc),
+        "cap": cap, "desc_chars": len(desc),
         "desc_multiline": desc.startswith((">", "|")) or (desc.startswith('"') and not desc.rstrip().endswith('"')),
         "ref_count": len(ref_md), "ref_kb": ref_bytes / 1024,
         "max_ref_kb": max((f.stat().st_size for f in ref_md), default=0) / 1024,
@@ -76,9 +78,9 @@ def roster(m: dict) -> list:
 
     add("DEFAULT", "description-templates.md",
         "desc is the trigger surface; skip ONLY if: desc unchanged since a prior audit this session")
-    add("FORCED" if m["body_chars"] > 6000 or m["body_lines"] > 100 else "SKIP",
+    add("FORCED" if m["body_chars"] > m["cap"] or m["body_lines"] > 100 else "SKIP",
         "body-quality-checklist.md",
-        f"body {m['body_chars']} chars / {m['body_lines']} lines vs caps 6000/100")
+        f"body {m['body_chars']} chars / {m['body_lines']} lines vs caps {m['cap']}/100")
     add("FORCED" if m["ordered"] else "SKIP", "visible-output-rule.md",
         "ordered multi-step body / gate chain detected" if m["ordered"] else "no ordered process detected")
     add("FORCED" if m["ordered"] else "SKIP", "effect-dry-run.md",

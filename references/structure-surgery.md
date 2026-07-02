@@ -33,7 +33,7 @@ Naming: `snake_case`, name states purpose (`<topic>.md`, `<operation>_workflow.m
 
 ## Routing tiers (escalate only when the compass budget forces it)
 
-Hard line: **SKILL.md ≤ 6000 chars**. Everything else is a soft signal.
+Hard line: **SKILL.md ≤ 6000 chars** — unless the skill declares a higher cap in frontmatter `compass-cap:` (owner-granted exemption, read by check_routes.py and index.py; skill-doctor itself carries 7000). Everything else is a soft signal.
 
 1. **Flat** — direct routing table in SKILL.md (≤ ~5 cohesive files).
 2. **Grouped** — routes under 2–4 topic subheadings, still in SKILL.md (~6–10 files).

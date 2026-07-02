@@ -143,7 +143,7 @@ python3 scripts/check_routes.py ~/.claude/skills/my-tool
 | 脚本 | 检查什么 | 命令 | 退出码 |
 | :--- | :--- | :--- | :--- |
 | `index.py` | 测量目标,打印维度点名(FORCED / DEFAULT / SKIP 带理由)和 `MODE=` 派发行 | `python3 scripts/index.py <skill_dir>` | 0 已点名 / 2 读不了 |
-| `check_routes.py` | 可达性、orphan、断链、6000 字符 compass 上限;`--before <snapshot>` 加一道内容守恒检查 | `python3 scripts/check_routes.py <skill_dir>` | 0 干净 / 1 有问题 |
+| `check_routes.py` | 可达性、orphan、断链、compass 上限(默认 6000 字符,可用 frontmatter 的 `compass-cap:` 覆写);`--before <snapshot>` 加一道内容守恒检查 | `python3 scripts/check_routes.py <skill_dir>` | 0 干净 / 1 有问题 |
 | `check_listing_budget.py` | description 总字符 vs 约占 1% 上下文的清单池;列出每个超 300 字符带的 description | `python3 scripts/check_listing_budget.py <root>` | 0 装得下 / 1 超出 / 2 不可用 |
 | `check_desc_slim.py` | 标出能瘦身、又不丢触发力的 description | `python3 scripts/check_desc_slim.py <skill_dir>` | 0 干净 / 1 有问题 |
 | `eval_retrieval.py` | 问模型(GLM,3 次多数投票)路由能不能凭 `when-to-read` 场景找到每个 reference | `python3 scripts/eval_retrieval.py <skill_dir> --glm` | 0 干净 / 1 有漏 |
