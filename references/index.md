@@ -16,8 +16,8 @@ policy** docs are pulled by the step or section that names them.
   when-to-read: body over ~100 lines or visibly bloated; deciding what moves from SKILL.md into references.
   keywords: body size, 500 lines, splitting decision, bloat, anti-patterns, when-to-use-in-body.
 - [visible-output-rule.md](visible-output-rule.md) — every workflow step must print something.
-  when-to-read: FORCED whenever the body has any ordered multi-step process (Step/Phase/station/pipeline/gate chain — wording irrelevant), per SKILL.md Step 2.
-  keywords: visible output, print per step, silently skipped, Seleznov, confirmation line, status prefix.
+  when-to-read: FORCED whenever the body has any ordered multi-step process (Step/Phase/station/pipeline/gate chain — wording irrelevant) OR the mission is exhaustive (per-item receipts required), per SKILL.md Step 2.
+  keywords: visible output, print per step, silently skipped, Seleznov, confirmation line, status prefix, exhaustive, per-item receipt.
 - [yaml-pitfalls.md](yaml-pitfalls.md) — frontmatter formatting traps.
   when-to-read: a multi-line description, special characters, or a Prettier project reflowing the frontmatter.
   keywords: YAML, frontmatter, Prettier reflow, multi-line description, special characters, single logical line.
@@ -34,8 +34,8 @@ policy** docs are pulled by the step or section that names them.
   when-to-read: a body containing any ordered multi-step process (Step/Phase/station/pipeline/gates); checking input→instruction→output link and gates fire when run. The §negative half (should-NOT-trigger prompts) applies to EVERY audit, workflow or not.
   keywords: dry-run, walkthrough, broken link, effect coherence, task shape, small revise prompt, gates fired, P0, negative prompt, should-not-trigger, over-trigger, false fire.
 - [runtime-contract.md](runtime-contract.md) — load floor, gate granularity, edit license: does the skill still bite when it actually runs.
-  when-to-read: FORCED when references/ exceeds ~30 KB, the skill's mission is editing/rewriting, or the skill declares hard gates; also when the owner says "it triggers but the edits feel shallow"; §4 whenever dispatching MODE=fanout.
-  keywords: runtime contract, load floor, minimal read-set, gate granularity, gate never fires, edit license, surgical-edit conflict, shallow edits, no-floor, gate-gap, missing-license, index.py, roster, MODE, dispatch, fanout, static table, receipt loop, self-review, blind re-audit, cross-model, glm, second opinion.
+  when-to-read: FORCED when references/ exceeds ~30 KB, the skill's mission is editing/rewriting or exhaustive (audit / checklist / style-imitation), or the skill declares hard gates; also when the owner says "it triggers but the edits feel shallow"; §4 whenever dispatching MODE=fanout.
+  keywords: runtime contract, load floor, minimal read-set, consumption mode, lookup, checklist, immersion, exhaustive mission, skip-safety, full set, read-receipt, gate granularity, gate never fires, edit license, surgical-edit conflict, shallow edits, no-floor, gate-gap, missing-license, index.py, roster, MODE, dispatch, fanout, static table, receipt loop, self-review, blind re-audit, cross-model, glm, second opinion.
 - [priority-tiers.md](priority-tiers.md) — P0–P3 definitions and where a finding goes.
   when-to-read: deciding a finding's severity, or whether a P3 is a real Code-layer finding or merely cosmetic (Low).
   keywords: P0, P1, P2, P3, priority tier, severity, placement rule, affects execution.

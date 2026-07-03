@@ -31,8 +31,13 @@ ORDERED_PATTERNS = [
     r"(?i)\bstation\b",
     r"(?m)^\d+\.\s+\*\*",                        # numbered bold flow items
 ]
-GATE_PATTERN = r"(?i)check_\w+\.py|必跑|硬门|道门|gate|checklist|交接"
+GATE_PATTERN = r"(?i)check_\w+\.py|必跑|硬门|道门|\bgate|checklist|交接"
 EDIT_MISSION = r"(?i)edit|rewrit|polish|revis|restructur|\bvoice\b|de-AI|writer|writing|prose|润色|改写|重组|修改|整理"
+# exhaustive mission: every item must be walked each run - skipping = silent miss.
+# Over-fire is safe (forces one extra reference); under-fire is the silent-skip disease.
+EXHAUSTIVE_MISSION = (r"(?i)audit|review|check|verif|inspect|lint|proofread|exhaustive|comprehensive"
+                      r"|every (?:rule|item|file)|item.by.item|imitat|style.match"
+                      r"|仿写|审查|体检|核对|逐条|清单")
 
 
 def measure(target: Path) -> dict:
@@ -65,6 +70,7 @@ def measure(target: Path) -> dict:
         "scripts": (target / "scripts").is_dir(), "assets": (target / "assets").is_dir(),
         "ordered": ordered or gates, "gates": gates,
         "editing": bool(re.search(EDIT_MISSION, desc)),
+        "exhaustive": bool(re.search(EXHAUSTIVE_MISSION, desc)),
         "routes_bad": routes_rc != 0,
     }
 
@@ -81,8 +87,10 @@ def roster(m: dict) -> list:
     add("FORCED" if m["body_chars"] > m["cap"] or m["body_lines"] > 100 else "SKIP",
         "body-quality-checklist.md",
         f"body {m['body_chars']} chars / {m['body_lines']} lines vs caps {m['cap']}/100")
-    add("FORCED" if m["ordered"] else "SKIP", "visible-output-rule.md",
-        "ordered multi-step body / gate chain detected" if m["ordered"] else "no ordered process detected")
+    add("FORCED" if m["ordered"] or m["exhaustive"] else "SKIP", "visible-output-rule.md",
+        "ordered multi-step body / gate chain detected" if m["ordered"]
+        else ("exhaustive mission - per-item receipts required" if m["exhaustive"]
+              else "no ordered process detected"))
     add("FORCED" if m["ordered"] else "DEFAULT", "effect-dry-run.md",
         "walk one prompt per task shape; count gates fired" if m["ordered"]
         else "no ordered process - positive walk skipped, but §negative (should-NOT-trigger) is mandatory on EVERY audit")
@@ -99,9 +107,10 @@ def roster(m: dict) -> list:
     add("FORCED", "priority-tiers.md", "spine - tiering needed on every audit")
     add("FORCED", "predictability-glossary.md", "spine - failure-mode labels needed on every audit")
     rc_why = [w for w, hit in ((f"refs {m['ref_kb']:.0f}KB>30", m["ref_kb"] > 30),
-                               ("editing mission", m["editing"]), ("declared gates", m["gates"])) if hit]
+                               ("editing mission", m["editing"]), ("declared gates", m["gates"]),
+                               ("exhaustive mission", m["exhaustive"])) if hit]
     add("FORCED" if rc_why else "SKIP", "runtime-contract.md",
-        " + ".join(rc_why) if rc_why else "light refs, no editing mission, no gates")
+        " + ".join(rc_why) if rc_why else "light refs, no editing/exhaustive mission, no gates")
     return rows
 
 
@@ -128,7 +137,8 @@ def main() -> int:
         print(f"[index.py] target: {t}")
         print(f"[index.py] measured: body={m['body_chars']}c/{m['body_lines']}l  desc={m['desc_chars']}c  "
               f"refs={m['ref_count']}f/{m['ref_kb']:.0f}KB  scripts={m['scripts']}  assets={m['assets']}  "
-              f"ordered-steps={m['ordered']}  editing={m['editing']}  routes_bad={m['routes_bad']}")
+              f"ordered-steps={m['ordered']}  editing={m['editing']}  exhaustive={m['exhaustive']}  "
+              f"routes_bad={m['routes_bad']}")
         rows = roster(m)
         for tier in ("FORCED", "DEFAULT", "SKIP"):
             for tr, name, why in rows:
