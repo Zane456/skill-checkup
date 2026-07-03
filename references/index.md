@@ -11,7 +11,7 @@ policy** docs are pulled by the step or section that names them.
 
 - [description-templates.md](description-templates.md) — trigger-strength template + listing-budget math.
   when-to-read: always; writing or fixing a description, a skill that won't auto-fire, or budget overflow.
-  keywords: description, trigger, ALWAYS invoke, first-50-chars, negative constraint, listing budget, third person, empty phrasing.
+  keywords: description, trigger, ALWAYS invoke, first-50-chars, negative constraint, listing budget, third person, empty phrasing, overlap, distinctness, routing collision, sibling skill.
 - [body-quality-checklist.md](body-quality-checklist.md) — when the body is too long and what to demote.
   when-to-read: body over ~100 lines or visibly bloated; deciding what moves from SKILL.md into references.
   keywords: body size, 500 lines, splitting decision, bloat, anti-patterns, when-to-use-in-body.
@@ -31,11 +31,11 @@ policy** docs are pulled by the step or section that names them.
   when-to-read: a reference too long, a file mixing topics, routing unclear, or orphan/dangling links.
   keywords: split skill, routing tiers, wiki-index, 2 hops, orphan, dangling, fission, conservation, restructure.
 - [effect-dry-run.md](effect-dry-run.md) — walk one prompt per task shape (1–3) through the workflow to see it connect.
-  when-to-read: a body containing any ordered multi-step process (Step/Phase/station/pipeline/gates); checking input→instruction→output link and gates fire when run.
-  keywords: dry-run, walkthrough, broken link, effect coherence, task shape, small revise prompt, gates fired, P0.
+  when-to-read: a body containing any ordered multi-step process (Step/Phase/station/pipeline/gates); checking input→instruction→output link and gates fire when run. The §negative half (should-NOT-trigger prompts) applies to EVERY audit, workflow or not.
+  keywords: dry-run, walkthrough, broken link, effect coherence, task shape, small revise prompt, gates fired, P0, negative prompt, should-not-trigger, over-trigger, false fire.
 - [runtime-contract.md](runtime-contract.md) — load floor, gate granularity, edit license: does the skill still bite when it actually runs.
   when-to-read: FORCED when references/ exceeds ~30 KB, the skill's mission is editing/rewriting, or the skill declares hard gates; also when the owner says "it triggers but the edits feel shallow"; §4 whenever dispatching MODE=fanout.
-  keywords: runtime contract, load floor, minimal read-set, gate granularity, gate never fires, edit license, surgical-edit conflict, shallow edits, no-floor, gate-gap, missing-license, index.py, roster, MODE, dispatch, fanout, static table, receipt loop.
+  keywords: runtime contract, load floor, minimal read-set, gate granularity, gate never fires, edit license, surgical-edit conflict, shallow edits, no-floor, gate-gap, missing-license, index.py, roster, MODE, dispatch, fanout, static table, receipt loop, self-review, blind re-audit, cross-model, glm, second opinion.
 - [priority-tiers.md](priority-tiers.md) — P0–P3 definitions and where a finding goes.
   when-to-read: deciding a finding's severity, or whether a P3 is a real Code-layer finding or merely cosmetic (Low).
   keywords: P0, P1, P2, P3, priority tier, severity, placement rule, affects execution.

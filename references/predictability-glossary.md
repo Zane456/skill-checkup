@@ -85,6 +85,10 @@ to the skill).
   (quality gates never fire on the common task size), `[missing-license]` (skill needs
   deeper edits than the environment's surgical-edit default allows, grants no explicit
   authority). Defined in `runtime-contract.md`; just label.
+- **Over-trigger** — the description captures adjacent-domain prompts it should stay
+  silent on; the invocation-side mirror of a weak leading word (which under-triggers).
+  Found by the negative dry-run (`effect-dry-run.md` §negative); tier **P2**. Just label
+  it `[over-trigger]`.
 
 ## Using these in the diagnosis
 
@@ -92,5 +96,5 @@ The failure mode says *what kind* of defect; P0–P3 says *how bad*. The two axe
 **orthogonal** — these names never replace a tier, they prefix it. In Step 3, tag a
 finding with its name so the user can act on it precisely, e.g.
 `[no-op]`, `[sediment]`, `[premature-completion]`, `[weak-leading-word]`,
-`[duplication]`, `[sprawl]`. Assign the tier by `priority-tiers.md`'s rule ("if unfixed,
+`[duplication]`, `[sprawl]`, `[over-trigger]`. Assign the tier by `priority-tiers.md`'s rule ("if unfixed,
 will the next LLM running this skill do something wrong?").

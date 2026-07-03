@@ -41,3 +41,11 @@ Contains static resources:
 - Templates (document templates, configuration templates)
 - Images (diagrams, examples)
 - Data files (lookup tables, schemas)
+
+## Bulk asset catalogs
+
+When `assets/` holds MANY items the model can't read inline (> ~20 binaries /
+template packs) and the skill's job is selecting among them, audit against —
+and recommend — the catalog-skill pattern: `references/catalog-skill-pattern.md`
+(tiered grep index → cards → payload, single-source regeneration, build-time
+drift gate, `routes-exempt` declaration).

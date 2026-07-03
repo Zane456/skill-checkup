@@ -83,8 +83,9 @@ def roster(m: dict) -> list:
         f"body {m['body_chars']} chars / {m['body_lines']} lines vs caps {m['cap']}/100")
     add("FORCED" if m["ordered"] else "SKIP", "visible-output-rule.md",
         "ordered multi-step body / gate chain detected" if m["ordered"] else "no ordered process detected")
-    add("FORCED" if m["ordered"] else "SKIP", "effect-dry-run.md",
-        "walk one prompt per task shape; count gates fired" if m["ordered"] else "no ordered process detected")
+    add("FORCED" if m["ordered"] else "DEFAULT", "effect-dry-run.md",
+        "walk one prompt per task shape; count gates fired" if m["ordered"]
+        else "no ordered process - positive walk skipped, but §negative (should-NOT-trigger) is mandatory on EVERY audit")
     add("FORCED" if m["desc_multiline"] else "SKIP", "yaml-pitfalls.md",
         "multi-line / block-scalar description" if m["desc_multiline"] else "single-line description")
     add("FORCED" if m["scripts"] else "SKIP", "hard-code-vs-llm-judgment.md",

@@ -113,6 +113,15 @@ allowed to be, then verifying it deterministically:
    That is the end-to-end test this protocol's static checks approximate; quote the run
    count before launching.
 
+## Routing distinctness — overlap across installed skills
+
+Trigger failure has a second axis besides this skill's own text: **collision with sibling descriptions**. The router sees every installed description at once, so two descriptions sharing their distinctive keywords are ambiguous even when each is individually well-written (community data: lov-alt/skill-distill reports routing accuracy ~49% under overlapping descriptions, ~74% after differentiation — their own benchmark, treat as indicative).
+
+- Measured mechanically on every audit: `scripts/check_listing_budget.py "<project_root>" --target <name>` prints pairwise overlap coefficient (|A∩B|/min(|A|,|B|), latin words + CJK bigrams, scaffolding stopwords removed; default threshold 0.40, `--threshold` to tune).
+- **Pairs involving the audited skill = P2.** Fix by sharpening each side's first-50-chars distinctive keywords, or by an explicit priority clause naming the sibling ("prefer X for domain Y" prose in whichever description should win).
+- **Pairs not involving it = population NOTICE** — report, never edit either side on this audit's initiative.
+- **Intentional siblings are legitimate** (paired tools, families with declared priority prose). Overlap is a collision *surface*, not a verdict — judge intent before tiering. A flagged sibling also supplies the best should-NOT-trigger prompt for the negative dry-run (`effect-dry-run.md` §negative).
+
 ## Third person is a hard rule
 
 The description is injected into the system prompt. First/second person breaks discovery:
@@ -185,6 +194,7 @@ description: PostgreSQL query optimizer. ALWAYS invoke when writing or reviewing
 - [ ] Within the per-description cap (1024 portable / 1536 CC)? (the ≤300/≤200 band is guidance for NEW or user-requested rewrites — never a standalone must-fix on an existing skill)
 - [ ] Population fits the shared listing budget? (`scripts/check_listing_budget.py` — **notify-only**, report the verdict and move on)
 - [ ] Live-injection: does the **current session's** available-skills list show this skill's description (not name-only)?
+- [ ] No overlap pair ≥ threshold with a sibling it doesn't intentionally pair with (`check_listing_budget.py --target`)?
 - [ ] Does it cover the synonyms / both languages the user actually says (trimmed per the budget reconciliation rule)?
 - [ ] Does it **not** summarize the workflow (it should only say "when to use" + "what expert it is")?
 - [ ] Does it have **no** empty phrasing (various / many / useful / general / things / comprehensive, etc.)?

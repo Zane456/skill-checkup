@@ -19,6 +19,7 @@ Exit 0 = clean, 1 = issues found.
 """
 
 import argparse
+import fnmatch
 import re
 import sys
 from pathlib import Path
@@ -26,7 +27,8 @@ from pathlib import Path
 COMPASS_CAP = 6000
 SUPPORT_DIRS = ("references", "scripts", "assets")
 SUPPORT_PREFIXES = tuple(d + "/" for d in SUPPORT_DIRS)
-PATHLIKE_EXT = (".md", ".py", ".sh", ".json", ".txt", ".html", ".js", ".yaml", ".yml", ".csv")
+PATHLIKE_EXT = (".md", ".py", ".sh", ".json", ".txt", ".html", ".js", ".yaml", ".yml", ".csv",
+                ".m", ".mlx", ".slx", ".mat")
 
 FENCE_RE = re.compile(r"```.*?```", re.DOTALL)
 MDLINK_RE = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
@@ -126,6 +128,18 @@ def walk_support_files(root: Path):
 def check_reachability_and_orphans(root: Path):
     issues = []
     skill_md = root / "SKILL.md"
+    # Optional frontmatter escape hatch for bulk payload dirs (template/asset
+    # catalogs, machine data): `routes-exempt: <glob>, <glob>` — matched files
+    # are skipped by the orphan walk, and the skip count is printed so the
+    # exemption can never hide silently.
+    exempt_globs = []
+    try:
+        m = re.search(r"(?m)^\s*routes-exempt:\s*(.+)$",
+                      skill_md.read_text(encoding="utf-8")[:2000])
+        if m:
+            exempt_globs = [g.strip() for g in m.group(1).split(",") if g.strip()]
+    except OSError:
+        pass
     reachable = set()
     queue = [skill_md.resolve()]
     seen_md = set()
@@ -157,9 +171,16 @@ def check_reachability_and_orphans(root: Path):
                 continue
             target = (cur.parent / path_part).resolve()
             if not target.exists():
-                if is_router:
-                    issues.append(f"[dangling] {rel(cur, root)} -> {raw} (file not found)")
-                continue
+                # Support-prefixed tokens (references/ scripts/ assets/) are
+                # skill-root-relative by convention; retry from the root before
+                # declaring the route broken.
+                alt = (root / path_part).resolve()
+                if alt.exists():
+                    target = alt
+                else:
+                    if is_router:
+                        issues.append(f"[dangling] {rel(cur, root)} -> {raw} (file not found)")
+                    continue
             reachable.add(target)
             if is_router and anchor and target.suffix == ".md":
                 slugs = heading_slugs(target.read_text(encoding="utf-8"))
@@ -169,9 +190,16 @@ def check_reachability_and_orphans(root: Path):
                 queue.append(target)
 
     # orphans: support files never reached
+    exempted = 0
     for p in walk_support_files(root):
         if p not in reachable:
-            issues.append(f"[orphan] {rel(p, root)} (not reachable from SKILL.md)")
+            rp = rel(p, root)
+            if any(fnmatch.fnmatch(rp, g) for g in exempt_globs):
+                exempted += 1
+                continue
+            issues.append(f"[orphan] {rp} (not reachable from SKILL.md)")
+    if exempted:
+        print(f"  routes-exempt: {exempted} unreachable file(s) skipped (globs: {', '.join(exempt_globs)})")
     return issues
 
 

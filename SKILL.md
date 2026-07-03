@@ -18,15 +18,17 @@ Diagnose and improve any SKILL.md. **A compass, not a manual** — standards liv
 > `[skill-doctor] self-review re-check: <agent> → <verdict summary>`
 > If it cannot run, say so explicitly and mark the work **unverified** — silence is not an option.
 
-### Step 1: Read the target, run both checkers
+### Step 1: Read the target, run the three checkers
 
-Read the target SKILL.md in full, then run both checkers (quote paths — spaces are common): `python3 <this-skill-dir>/scripts/check_listing_budget.py "<project_root>"` and `python3 <this-skill-dir>/scripts/check_routes.py "<skill_dir>"`. check_routes runs EVERY audit; compass-cap/dangling/orphan hits = P1. Print three lines:
+Read the target SKILL.md in full, then run the three checkers via `python3 <this-skill-dir>/scripts/…` (quote paths — spaces are common): `check_listing_budget.py "<project_root>" --target "<skill_name>"`, `check_routes.py "<skill_dir>"`, `check_script_safety.py "<skill_dir>"`. All three run EVERY audit; compass-cap/dangling/orphan hits = P1. Print five lines:
 ```
 [skill-doctor] Auditing: <path>  body=<N> lines  description=<M> chars
 [skill-doctor] Budget: <K> skills installed, descriptions <T> chars vs ≈<B> → <fits | OVERFLOW ×N.N>
+[skill-doctor] Overlap: <clean | N pair(s), M with target>
 [skill-doctor] Routes: <PASS | N issue(s): compass-over/dangling/orphan>
+[skill-doctor] Safety: <clean | N hit(s): <classes>>
 ```
-Budget exit 2 = unavailable → fallback row. **Overflow = population-level NOTICE, never a reason to shorten this skill's description** (slimming = user-run global pass).
+Budget exit 2 = unavailable → fallback row. Tiering: overflow & non-target overlap = NOTICE only; target overlap = P2 (`description-templates.md` §distinctness); safety hits = P1 pending legitimacy (`hard-code-vs-llm-judgment.md`). **Never edit the audited skill for a population notice; never auto-delete a safety hit** (slimming = user-run global pass).
 
 ### Step 2: Roster the dimensions, then read ONE at a time
 
@@ -36,7 +38,7 @@ MODE=inline → loop the roster one file per iteration: Read it → judge the ta
 [skill-doctor] <dimension>: <N> findings
 ```
 
-### Step 2.5: Dry-run walkthrough (when index.py reports ordered-steps=True)
+### Step 2.5: Dry-run walkthrough (positive walk when ordered-steps=True; negative ALWAYS)
 
 Following `references/effect-dry-run.md`, take one typical prompt PER task shape the description promises (write / revise / check, 1–3; small-scope revise prompt mandatory for editing skills). Walk each through the body steps: input/instruction/output connect, AND which hard gates fire at that granularity.
 Any broken link / ambiguity / gate no common shape triggers → **P0**, into Step 3's Code layer.
@@ -46,7 +48,11 @@ Print one line per prompt:
 ```
 No ordered process at all (pure rule / reference skill) → print:
 ```
-[skill-doctor] Dry-run: skipped (no workflow)
+[skill-doctor] Dry-run: positive walk skipped (no workflow)
+```
+ALWAYS (workflow or not): judge 1–2 should-NOT-trigger prompts against the description alone, per `effect-dry-run.md` §negative. Captured → **P2 `[over-trigger]`**. Print:
+```
+[skill-doctor] Dry-run negative: <K> prompts, false-fire=<J>
 ```
 
 ### Step 2.6: Live-injection check (when the target is in this session's scope)
@@ -62,7 +68,7 @@ Present per `references/output-format.md` — a **layered report in lesstoken st
 
 Substance that fills the layers:
 - Each finding: stable ID (`P0-1` …), specific line/field, risk 🟢/🟡/🔴, sorted P0→P3 (`references/priority-tiers.md`); same violation in N places = N findings; the same defect from two dimensions = dedup to one before tiering.
-- **Name the failure mode** when one applies — a `predictability-glossary.md` label: `[no-op]`/`[sediment]`/`[premature-completion]`/`[weak-leading-word]`/`[duplication]`/`[sprawl]`/`[no-floor]`/`[gate-gap]`/`[missing-license]`. Prefix = what kind, P-tier = how bad.
+- **Name the failure mode** when one applies — a `predictability-glossary.md` label: `[no-op]`/`[sediment]`/`[premature-completion]`/`[weak-leading-word]`/`[duplication]`/`[sprawl]`/`[over-trigger]`/`[no-floor]`/`[gate-gap]`/`[missing-license]`. Prefix = what kind, P-tier = how bad.
 - Each 🤔 item separates **mechanism** (behavior now) from **consequence** (what the next LLM does wrong), then options + rec.
 
 ### Step 4: Apply with Edit after user confirmation
@@ -81,7 +87,7 @@ Quantified hard rules (violation = error) → `references/hard-rules.md`, consul
 
 ## Exception fallback
 
-When a path is missing, YAML won't parse, or a bundled script (`scripts/index.py` `scripts/check_listing_budget.py` `scripts/check_routes.py` `scripts/eval_retrieval.py` `scripts/check_desc_slim.py`) is missing or exits 2 — handle per `references/exception-fallback.md`; announce first, never silently skip.
+When a path is missing, YAML won't parse, or any bundled script under `scripts/` is missing or exits 2 — handle per `references/exception-fallback.md` (authoritative script list lives there); announce first, never silently skip.
 
 ## Language
 
