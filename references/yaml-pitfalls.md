@@ -46,13 +46,13 @@ Only allowed: **lowercase letters + digits + hyphens**. Everything else errors o
 
 ```yaml
 # ❌
-name: Skill Doctor       # uppercase + space
-name: skill_doctor       # underscore
-name: skill-doctor!      # special character
-name: skill.doctor       # dot
+name: Skill Checkup   # uppercase + space
+name: skill_checkup   # underscore
+name: skill-checkup!  # special character
+name: skill.checkup   # dot
 
 # ✅
-name: skill-doctor
+name: skill-checkup
 name: writing-skills
 name: scheduled-task-macos
 ```
@@ -101,7 +101,7 @@ Informational fields like `metadata:` and `license:` are tolerated and ignored b
 
 The `@` prefix is a force-load — it makes Claude read the file into context immediately, bypassing progressive disclosure.
 
-## Diagnostic checklist (skill-doctor checks against this)
+## Diagnostic checklist (skill-checkup checks against this)
 
 Mechanical check — one wrong item is a "must fix":
 

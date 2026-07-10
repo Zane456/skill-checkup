@@ -10,7 +10,7 @@ stochastic model: the agent takes the same *process* every run, not the same out
 (a brainstorming skill should predictably diverge). Every term below is a lever on it.
 Cost and maintainability are symptoms of predictability, not rivals to it.
 
-## Net-new checks (skill-doctor had no explicit dimension for these)
+## Net-new checks (skill-checkup had no explicit dimension for these)
 
 ### No-op
 A line the model already obeys by default → you pay context load to say nothing.

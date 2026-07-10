@@ -59,11 +59,11 @@ The failure mode of LLM workflows: SKILL.md says "this skill will do X", but whe
 
 **Single-file line/char counts** — scriptable (grep / wc), but the LLM can also do it (it sees line numbers via Read). Judge by script cost vs on-the-spot reliability; if the LLM miss probability is > 5%, script it.
 
-**Population-level facts always cross the threshold.** An in-context LLM cannot know the other 60 installed skills without reading 60 directories — so the listing-budget + overlap check is `scripts/check_listing_budget.py`, link/orphan/conservation checks are `scripts/check_routes.py`, the risk-pattern scan is `scripts/check_script_safety.py`, and retrieval testing is `scripts/eval_retrieval.py` (restructure-time). These are skill-doctor's deterministic gates; everything semantic stays with the LLM.
+**Population-level facts always cross the threshold.** An in-context LLM cannot know the other 60 installed skills without reading 60 directories — so the listing-budget + overlap check is `scripts/check_listing_budget.py`, link/orphan/conservation checks are `scripts/check_routes.py`, the risk-pattern scan is `scripts/check_script_safety.py`, and retrieval testing is `scripts/eval_retrieval.py` (restructure-time). These are skill-checkup's deterministic gates; everything semantic stays with the LLM.
 
 ## Judgment when diagnosing a target SKILL.md
 
-When skill-doctor sees a section of the target SKILL.md saying "this skill will do X", categorize it by the table below:
+When skill-checkup sees a section of the target SKILL.md saying "this skill will do X", categorize it by the table below:
 
 | Action the section describes | Verdict |
 |------------------------------|---------|
@@ -89,7 +89,7 @@ Report format:
 
 ## Auditing a target's existing scripts/
 
-When the target skill ships `scripts/`, the doctor audits them mechanically (this dimension is what catches "confidently wrong numbers" from a buggy gate):
+When the target skill ships `scripts/`, skill-checkup audits them mechanically (this dimension is what catches "confidently wrong numbers" from a buggy gate):
 
 0. Step 1 already ran `scripts/check_script_safety.py` on the whole package (risk
    patterns: pipe-to-shell, destructive rm/git, credential paths, base64-exec,

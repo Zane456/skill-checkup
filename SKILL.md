@@ -1,11 +1,11 @@
 ---
-name: skill-doctor
+name: skill-checkup
 description: Skill quality + package structure expert. ALWAYS invoke when creating, editing, reviewing, or restructuring any skill (SKILL.md, references/, scripts/, routing, indexes), or on 审查/体检/修复/重构/拆分 skill. Do not modify or split a skill directly — use this skill first.
 metadata:
   compass-cap: 7000
 ---
 
-# Skill Doctor
+# Skill Checkup
 
 Diagnose and improve any SKILL.md. **A compass, not a manual** — standards live in `references/`.
 
@@ -14,19 +14,19 @@ Diagnose and improve any SKILL.md. **A compass, not a manual** — standards liv
 ## Diagnosis flow (each step must print)
 
 > Silent steps get skipped (Seleznov, 2026) — print one confirmation line per step.
-> **Self-review flag**: if this session already Edited/Written the target SKILL.md, **prefix every doctor print line with `[self-review]`**, and a fresh sub-agent blind re-audit **MUST run before the work is declared done** — spawn it with explicit file paths and NO expected findings (procedure + multi-target scaling: `runtime-contract.md` §4), then print:
-> `[skill-doctor] self-review re-check: <agent> → <verdict summary>`
+> **Self-review flag**: if this session already Edited/Written the target SKILL.md, **prefix every skill-checkup print line with `[self-review]`**, and a fresh sub-agent blind re-audit **MUST run before the work is declared done** — spawn it with explicit file paths and NO expected findings (procedure + multi-target scaling: `runtime-contract.md` §4), then print:
+> `[skill-checkup] self-review re-check: <agent> → <verdict summary>`
 > If it cannot run, say so explicitly and mark the work **unverified** — silence is not an option.
 
 ### Step 1: Read the target, run the three checkers
 
 Read the target SKILL.md in full, then run the three checkers via `python3 <this-skill-dir>/scripts/…` (quote paths — spaces are common): `check_listing_budget.py "<project_root>" --target "<skill_name>"`, `check_routes.py "<skill_dir>"`, `check_script_safety.py "<skill_dir>"`. All three run EVERY audit; compass-cap/dangling/orphan hits = P1. Print five lines:
 ```
-[skill-doctor] Auditing: <path>  body=<N> lines  description=<M> chars
-[skill-doctor] Budget: <K> skills installed, descriptions <T> chars vs ≈<B> → <fits | OVERFLOW ×N.N>
-[skill-doctor] Overlap: <clean | N pair(s), M with target>
-[skill-doctor] Routes: <PASS | N issue(s): compass-over/dangling/orphan>
-[skill-doctor] Safety: <clean | N hit(s): <classes>>
+[skill-checkup] Auditing: <path>  body=<N> lines  description=<M> chars
+[skill-checkup] Budget: <K> skills installed, descriptions <T> chars vs ≈<B> → <fits | OVERFLOW ×N.N>
+[skill-checkup] Overlap: <clean | N pair(s), M with target>
+[skill-checkup] Routes: <PASS | N issue(s): compass-over/dangling/orphan>
+[skill-checkup] Safety: <clean | N hit(s): <classes>>
 ```
 Budget exit 2 = unavailable → fallback row. Tiering: overflow & non-target overlap = NOTICE only; target overlap = P2 (`description-templates.md` §distinctness); safety hits = P1 pending legitimacy (`hard-code-vs-llm-judgment.md`). **Never edit the audited skill for a population notice; never auto-delete a safety hit** (slimming = user-run global pass).
 
@@ -35,7 +35,7 @@ Budget exit 2 = unavailable → fallback row. Tiering: overflow & non-target ove
 Run `python3 <this-skill-dir>/scripts/index.py "<skill_dir>"` — it measures the target and prints the dimension roster (FORCED / DEFAULT / SKIP + reasons) plus a `MODE=` line. The script is authoritative for firing; `references/index.md` is its human-readable mirror — don't re-judge firing from prose.
 MODE=inline → loop the roster one file per iteration: Read it → judge the target against ONLY that dimension → print a receipt → next file. DEFAULT skips must cite the roster's printed skip condition. MODE=fanout → `runtime-contract.md` §4.
 ```
-[skill-doctor] <dimension>: <N> findings
+[skill-checkup] <dimension>: <N> findings
 ```
 
 ### Step 2.5: Dry-run walkthrough (positive walk when ordered-steps=True; negative ALWAYS)
@@ -44,22 +44,22 @@ Following `references/effect-dry-run.md`, take one typical prompt PER task shape
 Any broken link / ambiguity / gate no common shape triggers → **P0**, into Step 3's Code layer.
 Print one line per prompt:
 ```
-[skill-doctor] Dry-run "<prompt>" (shape: <write|revise|check>)  broken links=<N>  gates fired=<M>/<total>
+[skill-checkup] Dry-run "<prompt>" (shape: <write|revise|check>)  broken links=<N>  gates fired=<M>/<total>
 ```
 No ordered process at all (pure rule / reference skill) → print:
 ```
-[skill-doctor] Dry-run: positive walk skipped (no workflow)
+[skill-checkup] Dry-run: positive walk skipped (no workflow)
 ```
 ALWAYS (workflow or not): judge 1–2 should-NOT-trigger prompts against the description alone, per `effect-dry-run.md` §negative. Captured → **P2 `[over-trigger]`**. Print:
 ```
-[skill-doctor] Dry-run negative: <K> prompts, false-fire=<J>
+[skill-checkup] Dry-run negative: <K> prompts, false-fire=<J>
 ```
 
 ### Step 2.6: Live-injection check (when the target is in this session's scope)
 
 Does the target appear in this session's available-skills list **with its description** (not name-only)? 3 cases + population-notice rule → `references/live-injection-check.md`. Print one line:
 ```
-[skill-doctor] Live-injection: <injected | DROPPED (name-only) | skipped (<reason>)>
+[skill-checkup] Live-injection: <injected | DROPPED (name-only) | skipped (<reason>)>
 ```
 
 ### Step 3: Output the diagnosis report
@@ -78,7 +78,7 @@ Substance that fills the layers:
 Before acting: **size gate** + **pre-deletion check**; afterwards **close the loop** — procedure in `references/apply-safety.md`.
 After fixing, print one line:
 ```
-[skill-doctor] Applied <N> fixes to <path>  body: <old>→<new> lines (<+X%>)
+[skill-checkup] Applied <N> fixes to <path>  body: <old>→<new> lines (<+X%>)
 ```
 
 ## Hard rules quick reference

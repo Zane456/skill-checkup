@@ -1,6 +1,6 @@
 # Priority Tiers (P0-P3)
 
-The skill-doctor diagnosis sorts the **Code layer** P0→P3. This file gives the definitions and placement rules.
+The skill-checkup diagnosis sorts the **Code layer** P0→P3. This file gives the definitions and placement rules.
 
 ## Definitions
 

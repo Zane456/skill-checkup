@@ -1,6 +1,6 @@
-# Skill-Doctor Reference Index
+# Skill-Checkup Reference Index
 
-The router for every skill-doctor subdocument. Each entry carries `when-to-read:`
+The router for every skill-checkup subdocument. Each entry carries `when-to-read:`
 (the scenario that should fetch it, in the user's own words) and `keywords:` (the
 searchable surface). Step 2 loads from **Dimensions** by condition; **Workflow &
 policy** docs are pulled by the step or section that names them.

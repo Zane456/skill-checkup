@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""index.py - dimension roster enumerator for skill-doctor.
+"""index.py - dimension roster enumerator for skill-checkup.
 
 Measures the audited skill package, evaluates every dimension's fire
 condition MECHANICALLY, prints the roster (FORCED / DEFAULT / SKIP with
@@ -20,8 +20,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-DOCTOR = Path(__file__).resolve().parent.parent
-REFS = DOCTOR / "references"
+SKILL_DIR = Path(__file__).resolve().parent.parent
+REFS = SKILL_DIR / "references"
 INLINE_KB_CAP = 45  # roster heavier than this -> fanout (3 spawns cost more than ~45KB of inline reads)
 
 ORDERED_PATTERNS = [
@@ -56,7 +56,7 @@ def measure(target: Path) -> dict:
     ref_bytes = sum(f.stat().st_size for f in ref_md)
     nonmd_refs = [f for f in refs.glob("**/*") if f.is_file() and f.suffix != ".md"] if refs.is_dir() else []
     routes_rc = subprocess.run(
-        [sys.executable, str(DOCTOR / "scripts" / "check_routes.py"), str(target)],
+        [sys.executable, str(SKILL_DIR / "scripts" / "check_routes.py"), str(target)],
         capture_output=True, text=True).returncode
     ordered = any(re.search(p, body) for p in ORDERED_PATTERNS)
     gates = bool(re.search(GATE_PATTERN, body))

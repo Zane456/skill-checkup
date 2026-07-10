@@ -4,7 +4,7 @@
 The skills list injected into the system prompt shares one budget (≈1% of the
 context window; CC issues #56710 / #47627). On overflow CC silently drops entire
 descriptions and keeps names only — a name-only skill cannot auto-trigger.
-This script measures the population so skill-doctor can judge one skill in context.
+This script measures the population so skill-checkup can judge one skill in context.
 
 Usage: python3 check_listing_budget.py [project_root] [--target <skill>] [--threshold 0.40]
 Exit:  0 = fits budget
@@ -35,11 +35,11 @@ import sys
 from pathlib import Path
 
 HOME = Path.home()
-CONTEXT_TOKENS = int(os.environ.get("SKILL_DOCTOR_CONTEXT_TOKENS", 1_000_000))
+CONTEXT_TOKENS = int(os.environ.get("SKILL_CHECKUP_CONTEXT_TOKENS", 1_000_000))
 # CC's budget scales with the CURRENT model's context window (official docs:
 # "the budget scales at 1% of the model's context window"), NOT a fixed ceiling.
 # Default assumes the user's main model is 1M-context (Opus 4.8 [1m]). Override
-# with SKILL_DOCTOR_CONTEXT_TOKENS=200000 when auditing for a 200k model/sub-agent.
+# with SKILL_CHECKUP_CONTEXT_TOKENS=200000 when auditing for a 200k model/sub-agent.
 CHARS_PER_TOKEN = 4               # rough chars/token for budget conversion
 DEFAULT_FRACTION = 0.01
 PER_DESC_CAP_PORTABLE = 1024      # agentskills.io spec

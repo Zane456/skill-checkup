@@ -2,7 +2,7 @@ English | [简体中文](README.zh-CN.md)
 
 <div align="center">
 
-# skill-doctor
+# skill-checkup
 
 **Reviews your Claude skills so they actually trigger, stay lean, and route cleanly.**
 
@@ -27,11 +27,11 @@ A real diagnosis, lightly trimmed:
 ```text
 $ "review my image-tool skill"
 
-[skill-doctor] Auditing: ~/.claude/skills/image-tool  body=143 lines  description=52 chars
-[skill-doctor] Budget: 32 skills installed, 11,515 chars vs ≈40,000 → fits
-[skill-doctor] Dry-run prompt: "use image-tool to convert this"  broken links=1
+[skill-checkup] Auditing: ~/.claude/skills/image-tool  body=143 lines  description=52 chars
+[skill-checkup] Budget: 32 skills installed, 11,515 chars vs ≈40,000 → fits
+[skill-checkup] Dry-run prompt: "use image-tool to convert this"  broken links=1
 
-[skill-doctor] Diagnosis
+[skill-checkup] Diagnosis
 
 ❌ Must fix (P0→P3)
   [P0 effect break]  Step 3 reads "the output file" but Step 2 never names one
@@ -115,7 +115,7 @@ Every check, threshold, and rule is listed in full under [Reference](#reference)
 Two design choices make the verdict worth trusting:
 
 - **Deterministic where it can be.** Counts, routing, and budget are settled by scripts that return exit codes, not by an opinion that drifts between runs.
-- **Honest where it can't.** If skill-doctor already edited your skill earlier in the same session, it stamps every line of its report `[self-review]` and tells you to re-check with a fresh agent. It discounts its own grade on purpose.
+- **Honest where it can't.** If skill-checkup already edited your skill earlier in the same session, it stamps every line of its report `[self-review]` and tells you to re-check with a fresh agent. It discounts its own grade on purpose.
 
 <!-- ============ Reference — skip unless you're looking something up ============ -->
 
@@ -216,7 +216,7 @@ A defect gets a name so you can act on it precisely; the P-tier says how bad, th
 ### Repository structure
 
 ```text
-skill-doctor/
+skill-checkup/
 ├── SKILL.md                              # the compass: diagnosis flow + routing
 ├── references/
 │   ├── index.md                          # routes to every dimension by when-to-read

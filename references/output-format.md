@@ -18,7 +18,7 @@ same facts.
 Exact-keep — never compress, never translate: file:line, field / frontmatter-key / section
 names, IDs (P0-1 …), code blocks, error strings, the failure-mode prefixes
 (`[no-op]`/`[sediment]`/`[premature-completion]`/`[weak-leading-word]`/`[duplication]`/`[sprawl]`/`[over-trigger]`/`[no-floor]`/`[gate-gap]`/`[missing-license]`),
-the `[skill-doctor]` status prefix.
+the `[skill-checkup]` status prefix.
 
 Match the user's reply language — and commit to it, no half-mixing. When that language is
 Chinese, the report is **basically all Chinese**: prose, section headers, AND the field labels in

@@ -2,7 +2,7 @@
 
 <div align="center">
 
-# skill-doctor
+# skill-checkup
 
 **给你的 Claude skill 做体检:让它真能触发、不臃肿、路由不断链。**
 
@@ -27,11 +27,11 @@
 ```text
 $ "审查我的 image-tool skill"
 
-[skill-doctor] Auditing: ~/.claude/skills/image-tool  body=143 lines  description=52 chars
-[skill-doctor] Budget: 32 skills installed, 11,515 chars vs ≈40,000 → fits
-[skill-doctor] Dry-run prompt: "use image-tool to convert this"  broken links=1
+[skill-checkup] Auditing: ~/.claude/skills/image-tool  body=143 lines  description=52 chars
+[skill-checkup] Budget: 32 skills installed, 11,515 chars vs ≈40,000 → fits
+[skill-checkup] Dry-run prompt: "use image-tool to convert this"  broken links=1
 
-[skill-doctor] Diagnosis
+[skill-checkup] Diagnosis
 
 ❌ Must fix (P0→P3)
   [P0 effect break]  Step 3 读 "the output file",但 Step 2 从没命名过输出
@@ -49,7 +49,7 @@ $ "审查我的 image-tool skill"
   - name 规则、路由(0 orphan / 0 dangling)、YAML、每步有可见输出
 ```
 
-坏掉的 skill 有个特点:**它不报错**。它只是不触发,或者 Claude 读了一半就悄悄走开。你几周后才发现,自己写的 skill 一次都没被叫起来过。skill-doctor 就是上线前逮住这件事的那一道关。
+坏掉的 skill 有个特点:**它不报错**。它只是不触发,或者 Claude 读了一半就悄悄走开。你几周后才发现,自己写的 skill 一次都没被叫起来过。skill-checkup 就是上线前逮住这件事的那一道关。
 
 ---
 
@@ -115,7 +115,7 @@ python3 scripts/check_routes.py ~/.claude/skills/my-tool
 两个设计让它的结论值得信:
 
 - **能确定的就确定。** 字符数、路由、预算,由带退出码的脚本定,不靠每次都会飘的主观判断。
-- **不能确定的就诚实。** 如果 skill-doctor 在同一个会话里已经改过你的 skill,它会给报告每一行盖上 `[self-review]`,并提醒你换一个全新 agent 复核。它**故意给自己的结论打折**。
+- **不能确定的就诚实。** 如果 skill-checkup 在同一个会话里已经改过你的 skill,它会给报告每一行盖上 `[self-review]`,并提醒你换一个全新 agent 复核。它**故意给自己的结论打折**。
 
 <!-- ============ 速查区——查东西时再看,平时可跳过 ============ -->
 
@@ -216,7 +216,7 @@ python3 scripts/check_routes.py ~/.claude/skills/my-tool
 ### 仓库结构
 
 ```text
-skill-doctor/
+skill-checkup/
 ├── SKILL.md                              # compass:诊断流程 + 路由
 ├── references/
 │   ├── index.md                          # 按 when-to-read 路由到每个维度

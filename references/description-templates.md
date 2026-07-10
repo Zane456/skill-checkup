@@ -185,7 +185,7 @@ description: A comprehensive skill for various useful tasks including many helpf
 description: PostgreSQL query optimizer. ALWAYS invoke when writing or reviewing SQL...
 ```
 
-## Diagnostic checklist (skill-doctor checks against this when reading this reference)
+## Diagnostic checklist (skill-checkup checks against this when reading this reference)
 
 - [ ] Do the first 50 characters contain the core trigger keywords?
 - [ ] Does it use "ALWAYS invoke" (not "Use when")?

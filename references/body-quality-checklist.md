@@ -44,7 +44,7 @@ State the condition explicitly:
 ❌ "See references/body-quality-checklist.md for more details"
 ```
 
-## Self-check before splitting (skill-doctor uses this list)
+## Self-check before splitting (skill-checkup uses this list)
 
 When diagnosing a body, ask in order:
 

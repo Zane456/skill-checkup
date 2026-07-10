@@ -10,7 +10,7 @@ Source: the Seleznov experiment (2026). Even after a skill has triggered and loa
 
 ```
 User: "help me check this SKILL.md"
-Claude triggers skill-doctor, loads SKILL.md
+Claude triggers skill-checkup, loads SKILL.md
 [Step 1: read the target file - executed silently]
 [Step 2: load references - executed silently]
 [Step 3: output the diagnosis]
@@ -28,7 +28,7 @@ Read the SKILL.md being edited.
 ✅ Forced-visible phrasing
 ## Step 1: Load the target SKILL.md
 Read the SKILL.md being edited, **print one line**:
-[skill-doctor] Loaded: <path>  body=<N> lines  description=<M> chars
+[skill-checkup] Loaded: <path>  body=<N> lines  description=<M> chars
 ```
 
 ## Which steps are especially dangerous
@@ -55,7 +55,7 @@ There is only one case where silence is allowed: the step's output **is what the
 
 ## How to use this when diagnosing
 
-When skill-doctor reads this reference, it checks the target SKILL.md's multi-step workflow:
+When skill-checkup reads this reference, it checks the target SKILL.md's multi-step workflow:
 
 - [ ] Does every step explicitly require producing visible output?
 - [ ] Do steps that load a file / references require printing the metadata?
