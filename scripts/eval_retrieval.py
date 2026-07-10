@@ -28,7 +28,6 @@ import argparse
 import json
 import os
 import re
-import subprocess
 import sys
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
@@ -36,7 +35,7 @@ from pathlib import Path
 
 GLM_ENDPOINT = "https://api.z.ai/api/anthropic/v1/messages"
 GLM_MODEL = "glm-5.2"
-PLIST = Path.home() / "Library/LaunchAgents/com.user.sync-knowledge-profile.plist"
+KEY_FILE = Path.home() / ".claude" / "secrets" / "glm.key"
 
 STOPWORDS = set("""a an the to of for and or in on at by with from into when how what
 which this that these those is are be use used using read when-to-read see file files
@@ -162,14 +161,11 @@ def read_glm_key() -> str:
     if key:
         return key.strip()
     try:
-        out = subprocess.run(
-            ["/usr/libexec/PlistBuddy", "-c",
-             "Print :EnvironmentVariables:GLM_API_KEY", str(PLIST)],
-            capture_output=True, text=True, timeout=10,
-        )
-        if out.returncode == 0:
-            return out.stdout.strip()
-    except Exception:
+        if KEY_FILE.is_file():
+            key = KEY_FILE.read_text(encoding="utf-8").strip()
+            if key:
+                return key
+    except OSError:
         pass
     return ""
 
@@ -200,7 +196,7 @@ def level2_glm(entries, max_calls: int, samples: int):
           f"hit = >={majority}/{samples} votes. One sweep, no loop.")
     key = read_glm_key()
     if not key:
-        print("  ERROR: no GLM_API_KEY (env or plist). GLM level did NOT run — "
+        print(f"  ERROR: no GLM key (env GLM_API_KEY or {KEY_FILE}). GLM level did NOT run — "
               "reporting FAILURE, not a silent skip.", file=sys.stderr)
         return 0, 0  # total=0 -> main marks the run as failed (see glm_ok)
     catalog = "\n".join(

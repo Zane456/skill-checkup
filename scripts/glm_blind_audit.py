@@ -26,7 +26,6 @@ Exit:  0 = GLM audit returned (opinion printed verbatim; merging is the
 """
 import json
 import os
-import subprocess
 import sys
 import urllib.request
 from pathlib import Path
@@ -34,7 +33,6 @@ from pathlib import Path
 GLM_ENDPOINT = "https://api.z.ai/api/anthropic/v1/messages"
 GLM_MODEL = "glm-5.2"
 KEY_FILE = Path.home() / ".claude" / "secrets" / "glm.key"
-PLIST = Path.home() / "Library/LaunchAgents/com.user.sync-knowledge-profile.plist"
 CODE_EXT = {".py", ".sh", ".bash", ".zsh", ".js", ".ts", ".rb", ".pl", ".ps1"}
 SCRIPT_HEAD_LINES = 40
 
@@ -74,15 +72,6 @@ def read_glm_key() -> str:
             if key:
                 return key
     except OSError:
-        pass
-    try:
-        out = subprocess.run(
-            ["/usr/libexec/PlistBuddy", "-c",
-             "Print :EnvironmentVariables:GLM_API_KEY", str(PLIST)],
-            capture_output=True, text=True, timeout=10)
-        if out.returncode == 0:
-            return out.stdout.strip()
-    except Exception:
         pass
     return ""
 
@@ -153,7 +142,7 @@ def main() -> int:
     key = read_glm_key()
     if not key:
         print("[glm_blind_audit] UNAVAILABLE: no GLM key (env GLM_API_KEY / "
-              f"{KEY_FILE} / plist) - cross-model audit did NOT run", file=sys.stderr)
+              f"{KEY_FILE}) - cross-model audit did NOT run", file=sys.stderr)
         return 2
     files = collect(root)
     payload = bundle(files, max_kb)

@@ -28,7 +28,7 @@ Read the target SKILL.md in full, then run the three checkers via `python3 <this
 [skill-checkup] Routes: <PASS | N issue(s): compass-over/dangling/orphan>
 [skill-checkup] Safety: <clean | N hit(s): <classes>>
 ```
-Budget exit 2 = unavailable → fallback row. Tiering: overflow & non-target overlap = NOTICE only; target overlap = P2 (`description-templates.md` §distinctness); safety hits = P1 pending legitimacy (`hard-code-vs-llm-judgment.md`). **Never edit the audited skill for a population notice; never auto-delete a safety hit** (slimming = user-run global pass).
+Budget exit 2 = unavailable → fallback row. Tiering: overflow & non-target overlap = NOTICE only; target overlap = P2 (`description-templates.md` §distinctness); safety hits = P0 when CRIT, else P1, pending legitimacy (`hard-code-vs-llm-judgment.md`); Safety clean → receipt line only, never a report line. **Never edit the audited skill for a population notice; never auto-delete a safety hit** (slimming = user-run global pass).
 
 ### Step 2: Roster the dimensions, then read ONE at a time
 
