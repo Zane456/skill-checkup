@@ -35,7 +35,11 @@ import sys
 from pathlib import Path
 
 HOME = Path.home()
-CONTEXT_TOKENS = int(os.environ.get("SKILL_CHECKUP_CONTEXT_TOKENS", 1_000_000))
+_ctx_old = os.environ.get("SKILL_DOCTOR_CONTEXT_TOKENS")   # name used before 2026-07
+if _ctx_old and not os.environ.get("SKILL_CHECKUP_CONTEXT_TOKENS"):
+    print("[check_listing_budget] WARNING: SKILL_DOCTOR_CONTEXT_TOKENS is deprecated,"
+          " rename it to SKILL_CHECKUP_CONTEXT_TOKENS", file=sys.stderr)
+CONTEXT_TOKENS = int(os.environ.get("SKILL_CHECKUP_CONTEXT_TOKENS") or _ctx_old or 1_000_000)
 # CC's budget scales with the CURRENT model's context window (official docs:
 # "the budget scales at 1% of the model's context window"), NOT a fixed ceiling.
 # Default assumes the user's main model is 1M-context (Opus 4.8 [1m]). Override

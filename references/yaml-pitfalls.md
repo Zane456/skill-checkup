@@ -101,7 +101,7 @@ Informational fields like `metadata:` and `license:` are tolerated and ignored b
 
 The `@` prefix is a force-load — it makes Claude read the file into context immediately, bypassing progressive disclosure.
 
-## Diagnostic checklist (skill-checkup checks against this)
+## Diagnostic checklist (check the target against this)
 
 Mechanical check — one wrong item is a "must fix":
 

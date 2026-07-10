@@ -63,7 +63,7 @@ The failure mode of LLM workflows: SKILL.md says "this skill will do X", but whe
 
 ## Judgment when diagnosing a target SKILL.md
 
-When skill-checkup sees a section of the target SKILL.md saying "this skill will do X", categorize it by the table below:
+When the target SKILL.md says "this skill will do X", categorize that section by the table below:
 
 | Action the section describes | Verdict |
 |------------------------------|---------|
@@ -89,7 +89,7 @@ Report format:
 
 ## Auditing a target's existing scripts/
 
-When the target skill ships `scripts/`, skill-checkup audits them mechanically (this dimension is what catches "confidently wrong numbers" from a buggy gate):
+When the target skill ships `scripts/`, audit them mechanically (this dimension is what catches "confidently wrong numbers" from a buggy gate):
 
 0. Step 1 already ran `scripts/check_script_safety.py` on the whole package (risk
    patterns: pipe-to-shell, destructive rm/git, credential paths, base64-exec,

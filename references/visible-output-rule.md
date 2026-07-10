@@ -55,7 +55,7 @@ There is only one case where silence is allowed: the step's output **is what the
 
 ## How to use this when diagnosing
 
-When skill-checkup reads this reference, it checks the target SKILL.md's multi-step workflow:
+When this reference fires, check the target SKILL.md's multi-step workflow:
 
 - [ ] Does every step explicitly require producing visible output?
 - [ ] Do steps that load a file / references require printing the metadata?

@@ -20,8 +20,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-SKILL_DIR = Path(__file__).resolve().parent.parent
-REFS = SKILL_DIR / "references"
+THIS_SKILL_DIR = Path(__file__).resolve().parent.parent
+REFS = THIS_SKILL_DIR / "references"
 INLINE_KB_CAP = 45  # roster heavier than this -> fanout (3 spawns cost more than ~45KB of inline reads)
 
 ORDERED_PATTERNS = [
@@ -56,7 +56,7 @@ def measure(target: Path) -> dict:
     ref_bytes = sum(f.stat().st_size for f in ref_md)
     nonmd_refs = [f for f in refs.glob("**/*") if f.is_file() and f.suffix != ".md"] if refs.is_dir() else []
     routes_rc = subprocess.run(
-        [sys.executable, str(SKILL_DIR / "scripts" / "check_routes.py"), str(target)],
+        [sys.executable, str(THIS_SKILL_DIR / "scripts" / "check_routes.py"), str(target)],
         capture_output=True, text=True).returncode
     ordered = any(re.search(p, body) for p in ORDERED_PATTERNS)
     gates = bool(re.search(GATE_PATTERN, body))
