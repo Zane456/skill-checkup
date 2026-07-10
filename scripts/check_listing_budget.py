@@ -19,10 +19,13 @@ keywords are ambiguous even when each is individually well-written. Pairs
 involving --target are the audited skill's P2 candidates; all other pairs are
 population NOTICEs. Overlap never affects the exit code.
 
+Claude Code only: budgets, pools and env vars below are CC mechanisms.
+
 Budget estimate (chars) =
   SLASH_COMMAND_TOOL_CHAR_BUDGET env var, if set (CC treats it as chars), else
   skillListingBudgetFraction (project settings.json > ~/.claude/settings.json,
-  default 0.01) x CONTEXT_TOKENS x CHARS_PER_TOKEN.
+  default 0.01) x CONTEXT_TOKENS (read from CC's CLAUDE_CODE_MAX_CONTEXT_TOKENS,
+  else the 200k standard window) x CHARS_PER_TOKEN.
 Estimate only: CC's exact drop order is undocumented (#31505) — fit with margin.
 Counted pools: global skills, project skills (project shadows global on same
 name, only one copy counted), plugin skills, and slash commands (~/.claude/commands
@@ -35,15 +38,11 @@ import sys
 from pathlib import Path
 
 HOME = Path.home()
-_ctx_old = os.environ.get("SKILL_DOCTOR_CONTEXT_TOKENS")   # name used before 2026-07
-if _ctx_old and not os.environ.get("SKILL_CHECKUP_CONTEXT_TOKENS"):
-    print("[check_listing_budget] WARNING: SKILL_DOCTOR_CONTEXT_TOKENS is deprecated,"
-          " rename it to SKILL_CHECKUP_CONTEXT_TOKENS", file=sys.stderr)
-CONTEXT_TOKENS = int(os.environ.get("SKILL_CHECKUP_CONTEXT_TOKENS") or _ctx_old or 1_000_000)
 # CC's budget scales with the CURRENT model's context window (official docs:
 # "the budget scales at 1% of the model's context window"), NOT a fixed ceiling.
-# Default assumes the user's main model is 1M-context (Opus 4.8 [1m]). Override
-# with SKILL_CHECKUP_CONTEXT_TOKENS=200000 when auditing for a 200k model/sub-agent.
+# CC exports its active window as CLAUDE_CODE_MAX_CONTEXT_TOKENS; absent = the
+# 200k standard window (the 1M window is opt-in and always sets the var).
+CONTEXT_TOKENS = int(os.environ.get("CLAUDE_CODE_MAX_CONTEXT_TOKENS", 200_000))
 CHARS_PER_TOKEN = 4               # rough chars/token for budget conversion
 DEFAULT_FRACTION = 0.01
 PER_DESC_CAP_PORTABLE = 1024      # agentskills.io spec
