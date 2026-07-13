@@ -100,10 +100,12 @@ def roster(m: dict) -> list:
         "target ships scripts/" if m["scripts"] else "no scripts/")
     add("FORCED" if m["assets"] or m["nonmd_refs"] else "SKIP", "assets-vs-references.md",
         "assets/ or non-md files under references/" if m["assets"] or m["nonmd_refs"] else "no assets, refs all .md")
-    add("FORCED" if m["routes_bad"] or m["ref_count"] > 10 or m["max_ref_kb"] > 12 else "SKIP",
+    body_over = m["body_chars"] > m["cap"] or m["body_lines"] > 100
+    surgery = m["routes_bad"] or m["ref_count"] > 10 or m["max_ref_kb"] > 12 or body_over
+    add("FORCED" if surgery else "SKIP",
         "structure-surgery.md",
-        "check_routes issues / >10 refs / a ref >12KB" if (m["routes_bad"] or m["ref_count"] > 10 or m["max_ref_kb"] > 12)
-        else "routes clean, ref sizes sane")
+        "check_routes issues / >10 refs / a ref >12KB / body over cap (a split needs the routing + conservation rules)"
+        if surgery else "routes clean, ref sizes sane, body within cap")
     add("FORCED", "priority-tiers.md", "spine - tiering needed on every audit")
     add("FORCED", "predictability-glossary.md", "spine - failure-mode labels needed on every audit")
     rc_why = [w for w, hit in ((f"refs {m['ref_kb']:.0f}KB>30", m["ref_kb"] > 30),

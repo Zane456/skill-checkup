@@ -48,6 +48,9 @@ policy** docs are pulled by the step or section that names them.
 - [hard-rules.md](hard-rules.md) — the quantified must-pass rules.
   when-to-read: need the hard caps and format laws (char/line limits, third person, name regex, evidence-gating).
   keywords: hard rules, 1024 chars, 500 lines, third person, name regex, routing depth, evidence-gating.
+- [catalog-skill-pattern.md](catalog-skill-pattern.md) — recommended three-tier structure for bulk-payload skills (many files the model should not read inline).
+  when-to-read: the audited skill's payload is many files / binaries / template packs (> ~20 selected per task); pulled by assets-vs-references.md when recommending a catalog structure.
+  keywords: catalog skill, bulk payload, by-keyword index, cards, token budget, lookup workflow, binary payload, template pack, directory scan.
 - [exception-fallback.md](exception-fallback.md) — what to do when something errors.
   when-to-read: target path missing, YAML unparseable, a bundled script failed, or the file is read-only.
   keywords: exception, error handling, missing path, unparseable YAML, script unavailable, read-only.
