@@ -47,8 +47,15 @@ def measure(target: Path) -> dict:
     m = re.match(r"(?s)^---\n(.*?)\n---\n?", raw)
     if m:
         fm, body = m.group(1), raw[m.end():]
-    dm = re.search(r"(?m)^description:\s*(.+)$", fm)
-    desc = dm.group(1).strip() if dm else ""
+    # capture the FULL description block: same-line value + indented
+    # continuation lines (plain-scalar wrap or block-scalar content) — a
+    # first-line-only match misclassifies editing/exhaustive missions whose
+    # keywords sit past line 1, and the wrong verdict is un-overridable by
+    # design. Value anchored to the description: line so an EMPTY value never
+    # swallows the next key's block.
+    dm = re.search(r"(?m)^description:[ \t]*(\S[^\n]*(?:\n[ \t]+\S[^\n]*)*)", fm)
+    raw_desc = dm.group(1) if dm else ""
+    desc = re.sub(r"\s+", " ", raw_desc).strip()
     cm = re.search(r"(?m)^\s*compass-cap:\s*(\d+)", fm)
     cap = int(cm.group(1)) if cm else 6000
     refs = target / "references"
@@ -63,7 +70,7 @@ def measure(target: Path) -> dict:
     return {
         "body_chars": len(body), "body_lines": body.count("\n") + 1,
         "cap": cap, "desc_chars": len(desc),
-        "desc_multiline": desc.startswith((">", "|")) or (desc.startswith('"') and not desc.rstrip().endswith('"')),
+        "desc_multiline": "\n" in raw_desc or desc.startswith((">", "|")),
         "ref_count": len(ref_md), "ref_kb": ref_bytes / 1024,
         "max_ref_kb": max((f.stat().st_size for f in ref_md), default=0) / 1024,
         "nonmd_refs": len(nonmd_refs),
@@ -108,6 +115,7 @@ def roster(m: dict) -> list:
         if surgery else "routes clean, ref sizes sane, body within cap")
     add("FORCED", "priority-tiers.md", "spine - tiering needed on every audit")
     add("FORCED", "predictability-glossary.md", "spine - failure-mode labels needed on every audit")
+    add("FORCED", "hard-rules.md", "spine - quantified must-pass rules consulted on every audit")
     rc_why = [w for w, hit in ((f"refs {m['ref_kb']:.0f}KB>30", m["ref_kb"] > 30),
                                ("editing mission", m["editing"]), ("declared gates", m["gates"]),
                                ("exhaustive mission", m["exhaustive"])) if hit]
@@ -118,7 +126,7 @@ def roster(m: dict) -> list:
 
 BUNDLES = {
     "form": ["description-templates.md", "body-quality-checklist.md", "yaml-pitfalls.md",
-             "assets-vs-references.md", "structure-surgery.md"],
+             "assets-vs-references.md", "structure-surgery.md", "hard-rules.md"],
     "predictability": ["predictability-glossary.md", "visible-output-rule.md",
                        "hard-code-vs-llm-judgment.md", "priority-tiers.md"],
     "effect": ["effect-dry-run.md", "runtime-contract.md"],
@@ -161,7 +169,8 @@ def main() -> int:
               f"{'; '.join(parts)}; + 1 reserved self-review slot)")
     else:
         print(f"[index.py] MODE=inline (roster {kb:.0f}KB <= {INLINE_KB_CAP}KB; "
-              f"loop: Read one file -> judge that dimension only -> print receipt -> next)")
+              f"loop: Read one file -> judge that dimension only -> print receipt -> next; "
+              f"close with '[skill-checkup] roster complete: {len(loads)}/{len(loads)} dimensions judged')")
     return 0
 
 

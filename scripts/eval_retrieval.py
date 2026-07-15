@@ -21,7 +21,9 @@ Usage:
   python3 eval_retrieval.py <skill_dir>
   python3 eval_retrieval.py <skill_dir> --glm [--samples 3] [--max-calls 90]
 
-Exit 0 if hit-rate == 100%, else 1.
+Exit 0 if hit-rate == 100%, else 1; 2 = SKILL.md missing (script unavailable —
+report per exception-fallback.md, never invent a verdict). A missing or empty
+references/ evaluates as nothing-to-check and exits 0.
 """
 
 import argparse

@@ -15,7 +15,8 @@ Usage:
   python3 check_routes.py <skill_dir>
   python3 check_routes.py <skill_dir> --before <snapshot_dir>
 
-Exit 0 = clean, 1 = issues found.
+Exit 0 = clean, 1 = issues found, 2 = SKILL.md missing (script unavailable —
+report per exception-fallback.md, never invent a verdict).
 """
 
 import argparse

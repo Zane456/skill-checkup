@@ -15,8 +15,8 @@ Bundle: SKILL.md + references/**/*.md + scripts code files, with printed
 degradation if over --max-kb (scripts trimmed to heads first, then dropped -
 never silently).
 
-Key source: $GLM_API_KEY, else ~/.claude/secrets/glm.key, else the
-sync-knowledge-profile plist. The key never appears in output.
+Key source: $GLM_API_KEY, else ~/.claude/secrets/glm.key. The key never
+appears in output.
 
 Usage: python3 glm_blind_audit.py "<skill_dir>" [--max-kb 200] [--max-tokens 4000]
 Exit:  0 = GLM audit returned (opinion printed verbatim; merging is the
