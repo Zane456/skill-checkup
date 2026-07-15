@@ -38,7 +38,7 @@ The line break after each line becomes a space, so it reads like one long senten
 
 ## 2. Silent truncation of the character budget
 
-Single source of truth: `description-templates.md` §"The character budget" (per-description 1024 portable / 1536 CC ≥ 2.1.105; whole listing ≈ 1% of context; levers and target bands there). Measure with `scripts/check_listing_budget.py` — do not quote numbers from memory.
+Single source of truth: `slimming-workflow.md` §"The character budget" (per-description 1024 portable / 1536 CC ≥ 2.1.105; whole listing ≈ 1% of context; levers and target bands there). Measure with `scripts/check_listing_budget.py` — do not quote numbers from memory.
 
 ## 3. The name field regex
 
@@ -106,7 +106,7 @@ The `@` prefix is a force-load — it makes Claude read the file into context im
 Mechanical check — one wrong item is a "must fix":
 
 - [ ] Is the description a single logical line (no blank line / no `>` `|` block)?
-- [ ] Within the caps and bands? (numbers live in `description-templates.md` §budget; measure via `scripts/check_listing_budget.py`)
+- [ ] Within the caps and bands? (numbers live in `slimming-workflow.md` §budget; measure via `scripts/check_listing_budget.py`)
 - [ ] Is the name `^[a-z0-9-]+$` **and** equal to the directory name?
 - [ ] Is the description third person (no "I"/"you" subject)?
 - [ ] Frontmatter fields all recognized or informational (see §5)? If `allowed-tools` present, does it cover every tool the body instructs?

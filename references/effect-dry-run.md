@@ -11,11 +11,11 @@ An ailment that pure structural review cannot catch: the format is all correct, 
 
 ## Procedure
 
-### 1. Take one typical prompt per task shape (1–3 prompts)
+### 1. Take one typical prompt per task shape (one per shape the description promises)
 
 List the task shapes the description promises (write/create, revise/polish, check/audit …). For each shape, take the first sentence the user would **most likely** say — not an edge case.
 
-The **small-scope revise prompt is mandatory** whenever the skill serves editing tasks: pipelines and gates are usually keyed to the big write shape ("finish a chapter"), and quietly never fire for the everyday small edit — only the small prompt exposes that. Cap at 3 prompts; an exhaustive prompt matrix is skill-creator's `evals/evals.json`.
+The **small-scope revise prompt is mandatory** whenever the skill serves editing tasks: pipelines and gates are usually keyed to the big write shape ("finish a chapter"), and quietly never fire for the everyday small edit — only the small prompt exposes that. Cap at one prompt per promised shape — a description promising four shapes gets four walks, never fewer; an exhaustive prompt matrix is skill-creator's `evals/evals.json`.
 
 Example: skill-checkup itself → "help me review this SKILL.md"
 Example: proofreading → "proofread this text" (write shape) + "fix just this paragraph" (small revise shape)
@@ -52,7 +52,7 @@ Print one aggregate line: `[skill-checkup] Dry-run negative: <K> prompts, false-
 ## What not to do
 
 - Do not actually spawn a sub-agent to run it — real with/without-skill runs are skill-creator's `run_eval.py` job, skill-checkup only does the dry-run
-- Do not exceed 3 prompts — one per task shape is enough; an exhaustive matrix is skill-creator's `evals/evals.json`
+- Do not exceed one prompt per promised task shape — but never drop a promised shape either; an exhaustive matrix is skill-creator's `evals/evals.json`
 - Do not use dry-run results for scoring — skill-checkup does not score, it only marks P0/P1/P2/P3
 
 ## Example: running a dry-run on skill-checkup
@@ -60,9 +60,9 @@ Print one aggregate line: `[skill-checkup] Dry-run negative: <K> prompts, false-
 prompt: "help me review this SKILL.md, path is ~/x/SKILL.md"
 
 - Step 1 reads and prints the body line count → ✅ input is clear, body line count feeds the Step 4 size gate
-- Step 2 selects references by table → ✅ table conditions are specific
+- Step 2 selects references by the index.py roster → ✅ fire conditions are measured and printed
 - Step 2.5 dry-run (this step itself) → ✅ stops at 1 level of recursion, no further nesting
 - Step 3 outputs the diagnosis (with P0-P3 priorities) → ✅ template is strict
 - Step 4 size gate + Edit → ✅ waits for user confirmation
 
-Connects. If Step 2's table only said "select as appropriate", it would break the link at that step — that is a P0.
+Connects. If Step 2's roster only said "select as appropriate", it would break the link at that step — that is a P0.

@@ -96,7 +96,8 @@ When the target skill ships `scripts/`, audit them mechanically (this dimension 
    shell=True, exfil, hidden unicode in prose). **Detection is mechanical; conviction
    is semantic** — judge each hit in context: a documented example in prose is
    legitimate (note-only); the same pattern in a bundled script, or prose
-   *instructing* the model to run it, is **P1**. Never auto-delete a flagged line.
+   *instructing* the model to run it, is **P0 when the hit is CRIT, else P1**.
+   Never auto-delete a flagged line.
 1. `python3 -m py_compile <script>` (or a `--help` / dry-run invocation) — does it even run?
 2. Does the body's invocation match the script's actual argv (flags, arg order, quoting of paths with spaces)?
 3. Hardcoded absolute paths / another machine's layout? (breaks on any other install)

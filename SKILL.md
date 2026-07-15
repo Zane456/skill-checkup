@@ -2,7 +2,7 @@
 name: skill-checkup
 description: Skill quality + package structure expert. ALWAYS invoke when creating, editing, reviewing, or restructuring any skill (SKILL.md, references/, scripts/, routing, indexes), or on 审查/体检/修复/重构/拆分 skill. Do not modify or split a skill directly — use this skill first.
 metadata:
-  compass-cap: 7000
+  compass-cap: 7500
 ---
 
 # Skill Checkup
@@ -20,6 +20,7 @@ Diagnose and improve any SKILL.md. **A compass, not a manual** — standards liv
 
 ### Step 1: Read the target, run the three checkers
 
+**Create shape (no target exists yet)** → hand drafting to `skill-creator`, print `[skill-checkup] create: no target — drafting → skill-creator, checkup resumes on the draft`, and resume here once the draft lands.
 Read the target SKILL.md in full, then run the three checkers via `python3 <this-skill-dir>/scripts/…` (quote paths — spaces are common): `check_listing_budget.py "<project_root>" --target "<skill_name>"`, `check_routes.py "<skill_dir>"`, `check_script_safety.py "<skill_dir>"`. All three run EVERY audit; compass-cap/dangling/orphan hits = P1. Print five lines:
 ```
 [skill-checkup] Auditing: <path>  body=<N> lines  description=<M> chars
@@ -40,11 +41,11 @@ MODE=inline → loop the roster one file per iteration: Read it → judge the ta
 
 ### Step 2.5: Dry-run walkthrough (positive walk when ordered-steps=True; negative ALWAYS)
 
-Following `references/effect-dry-run.md`, take one typical prompt PER task shape the description promises (write / revise / check, 1–3; small-scope revise prompt mandatory for editing skills). Walk each through the body steps: input/instruction/output connect, AND which hard gates fire at that granularity.
+Following `references/effect-dry-run.md`, take one typical prompt PER task shape the description promises (write / revise / check / restructure — one per promised shape; small-scope revise prompt mandatory for editing skills). Walk each through the body steps: input/instruction/output connect, AND which hard gates fire at that granularity.
 Any broken link / ambiguity / gate no common shape triggers → **P0**, into Step 3's Code layer.
 Print one line per prompt:
 ```
-[skill-checkup] Dry-run "<prompt>" (shape: <write|revise|check>)  broken links=<N>  gates fired=<M>/<total>
+[skill-checkup] Dry-run "<prompt>" (shape: <write|revise|check|restructure>)  broken links=<N>  gates fired=<M>/<total>
 ```
 No ordered process at all (pure rule / reference skill) → print:
 ```

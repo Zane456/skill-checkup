@@ -9,9 +9,9 @@ policy** docs are pulled by the step or section that names them.
 
 **This section is the human-readable mirror and retrieval surface; the script is authoritative.** When adding or retiring a dimension, update BOTH: the entry here (when-to-read + keywords) and its fire condition in the script — a row in only one place will drift.
 
-- [description-templates.md](description-templates.md) — trigger-strength template + listing-budget math.
-  when-to-read: always; writing or fixing a description, a skill that won't auto-fire, or budget overflow.
-  keywords: description, trigger, ALWAYS invoke, first-50-chars, negative constraint, listing budget, third person, empty phrasing, overlap, distinctness, routing collision, sibling skill.
+- [description-templates.md](description-templates.md) — trigger-strength template + distinctness (budget & slimming ops relocated to their own workflow doc).
+  when-to-read: always; writing or fixing a description, or a skill that won't auto-fire.
+  keywords: description, trigger, ALWAYS invoke, first-50-chars, negative constraint, third person, empty phrasing, overlap, distinctness, routing collision, sibling skill.
 - [body-quality-checklist.md](body-quality-checklist.md) — when the body is too long and what to demote.
   when-to-read: body over ~100 lines or visibly bloated; deciding what moves from SKILL.md into references.
   keywords: body size, 500 lines, splitting decision, bloat, anti-patterns, when-to-use-in-body.
@@ -30,7 +30,7 @@ policy** docs are pulled by the step or section that names them.
 - [structure-surgery.md](structure-surgery.md) — how to split/restructure and route subdocuments.
   when-to-read: a reference too long, a file mixing topics, routing unclear, or orphan/dangling links.
   keywords: split skill, routing tiers, wiki-index, 2 hops, orphan, dangling, fission, conservation, restructure.
-- [effect-dry-run.md](effect-dry-run.md) — walk one prompt per task shape (1–3) through the workflow to see it connect.
+- [effect-dry-run.md](effect-dry-run.md) — walk one prompt per promised task shape through the workflow to see it connect.
   when-to-read: a body containing any ordered multi-step process (Step/Phase/station/pipeline/gates); checking input→instruction→output link and gates fire when run. The §negative half (should-NOT-trigger prompts) applies to EVERY audit, workflow or not.
   keywords: dry-run, walkthrough, broken link, effect coherence, task shape, small revise prompt, gates fired, P0, negative prompt, should-not-trigger, over-trigger, false fire.
 - [runtime-contract.md](runtime-contract.md) — load floor, gate granularity, edit license: does the skill still bite when it actually runs.
@@ -39,15 +39,15 @@ policy** docs are pulled by the step or section that names them.
 - [priority-tiers.md](priority-tiers.md) — P0–P3 definitions and where a finding goes.
   when-to-read: deciding a finding's severity, or whether a P3 is a real Code-layer finding or merely cosmetic (Low).
   keywords: P0, P1, P2, P3, priority tier, severity, placement rule, affects execution.
+- [hard-rules.md](hard-rules.md) — the quantified must-pass rules (spine, FORCED every audit).
+  when-to-read: always; the hard caps and format laws (char/line limits, third person, name regex, evidence-gating) checked on every audit.
+  keywords: hard rules, 1024 chars, 500 lines, third person, name regex, routing depth, evidence-gating.
 - [predictability-glossary.md](predictability-glossary.md) — quality vocabulary beyond form: the failure modes.
   when-to-read: always; judging quality past form, or naming a defect (no-op, sediment, completion criterion, leading word).
   keywords: predictability, no-op, sediment, sprawl, duplication, premature completion, completion criterion, leading word.
 
 ## Workflow & policy (pulled by the step or section that names them)
 
-- [hard-rules.md](hard-rules.md) — the quantified must-pass rules.
-  when-to-read: need the hard caps and format laws (char/line limits, third person, name regex, evidence-gating).
-  keywords: hard rules, 1024 chars, 500 lines, third person, name regex, routing depth, evidence-gating.
 - [catalog-skill-pattern.md](catalog-skill-pattern.md) — recommended three-tier structure for bulk-payload skills (many files the model should not read inline).
   when-to-read: the audited skill's payload is many files / binaries / template packs (> ~20 selected per task); pulled by assets-vs-references.md when recommending a catalog structure.
   keywords: catalog skill, bulk payload, by-keyword index, cards, token budget, lookup workflow, binary payload, template pack, directory scan.
@@ -66,6 +66,9 @@ policy** docs are pulled by the step or section that names them.
 - [live-injection-check.md](live-injection-check.md) — Step 2.6 detail: is the description actually injected.
   when-to-read: checking if the target skill shows its description this session, or is dropped name-only.
   keywords: live injection, name-only, budget drop, available-skills list, session scope, population notice.
+- [slimming-workflow.md](slimming-workflow.md) — global-pass operation: budget ceiling, compression order, slimming safety protocol.
+  when-to-read: a user-initiated GLOBAL slimming pass, or population listing-overflow remediation across installed skills; never during a single-skill audit (overflow is notify-only there).
+  keywords: slimming, global pass, character budget, listing budget, skillListingBudgetFraction, compression order, deletion-only, check_desc_slim, target band, 300 chars, name-only drop.
 - [rationale.md](rationale.md) — why this skill exists at all.
   when-to-read: background on why the skill exists — the LLM habit of writing a SKILL.md as a manual.
   keywords: rationale, why this skill exists, treats SKILL.md as a manual, long narration, background, philosophy.
