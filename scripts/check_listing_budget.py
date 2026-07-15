@@ -7,7 +7,7 @@ descriptions and keeps names only — a name-only skill cannot auto-trigger.
 This script measures the population so skill-checkup can judge one skill in context.
 
 Usage: python3 check_listing_budget.py [project_root] [--target <skill>] [--threshold 0.40]
-Exit:  0 = fits budget
+Exit:  0 = fits budget, OR budget skipped (non-CC harness) — overlap/cap still reported
        1 = OVERFLOW (this is a finding — use the printed numbers, do not treat as error)
        2 = nothing found / script error (only this exit means "budget unavailable")
 
@@ -19,7 +19,11 @@ keywords are ambiguous even when each is individually well-written. Pairs
 involving --target are the audited skill's P2 candidates; all other pairs are
 population NOTICEs. Overlap never affects the exit code.
 
-Claude Code only: budgets, pools and env vars below are CC mechanisms.
+Harness gate: the budget estimate below is a Claude-Code-only mechanism. When
+CLAUDECODE is unset (Codex, Gemini, other tools) the budget section is SKIPPED —
+Codex enforces its own 2%/8000-char listing budget internally, other tools differ,
+and neither exposes a window the way CC does. The per-description cap and the
+description-overlap pass still run: routing distinctness is harness-independent.
 
 Budget estimate (chars) =
   SLASH_COMMAND_TOOL_CHAR_BUDGET env var, if set (CC treats it as chars), else
@@ -38,10 +42,12 @@ import sys
 from pathlib import Path
 
 HOME = Path.home()
+IN_CC = "CLAUDECODE" in os.environ   # harness gate — budget section runs only under CC
 # CC's budget scales with the CURRENT model's context window (official docs:
 # "the budget scales at 1% of the model's context window"), NOT a fixed ceiling.
-# CC exports its active window as CLAUDE_CODE_MAX_CONTEXT_TOKENS; absent = the
-# 200k standard window (the 1M window is opt-in and always sets the var).
+# CC exports its active window as CLAUDE_CODE_MAX_CONTEXT_TOKENS when it can, but the
+# var can be absent even on a 1M session (registry-stale bug, CC issues #23432/#58710);
+# absent → fall back to the 200k standard window. Only read inside the IN_CC branch.
 CONTEXT_TOKENS = int(os.environ.get("CLAUDE_CODE_MAX_CONTEXT_TOKENS", 200_000))
 CHARS_PER_TOKEN = 4               # rough chars/token for budget conversion
 DEFAULT_FRACTION = 0.01
@@ -218,23 +224,31 @@ def main() -> int:
         return 2
 
     total = sum(len(d) for _, _, d in every)
-    env = os.environ.get("SLASH_COMMAND_TOOL_CHAR_BUDGET")
-    if env and env.isdigit():
-        budget, basis = int(env), "SLASH_COMMAND_TOOL_CHAR_BUDGET env"
-    else:
-        frac = load_fraction(project_root)
-        budget = int(frac * CONTEXT_TOKENS * CHARS_PER_TOKEN)
-        basis = f"{frac:.0%} x {CONTEXT_TOKENS // 1000}k ctx x ~{CHARS_PER_TOKEN} chars/token"
-
     n_skills = len(every) - len(cmds)
     band = BAND_CROWDED if n_skills >= 40 else BAND
     print(f"== skill listing budget ==")
     print(f"sources: " + "  ".join(f"{k}={len(v)}" for k, v in groups.items())
           + (f"   (shadowed dupes dropped: {len(shadowed)})" if shadowed else ""))
-    print(f"descriptions total: {total:,} chars   budget ~= {budget:,} chars ({basis})")
-    verdict = "fits" if total <= budget else f"OVERFLOW x{total / budget:.1f} - expect silent name-only truncation"
-    print(f"verdict: {verdict}")
-    print(f"note: drop order is undocumented (#31505) - fit with margin; context window assumed {CONTEXT_TOKENS // 1000}k")
+
+    overflow = False
+    if IN_CC:
+        env = os.environ.get("SLASH_COMMAND_TOOL_CHAR_BUDGET")
+        if env and env.isdigit():
+            budget, basis = int(env), "SLASH_COMMAND_TOOL_CHAR_BUDGET env"
+        else:
+            frac = load_fraction(project_root)
+            budget = int(frac * CONTEXT_TOKENS * CHARS_PER_TOKEN)
+            basis = f"{frac:.0%} x {CONTEXT_TOKENS // 1000}k ctx x ~{CHARS_PER_TOKEN} chars/token"
+        print(f"descriptions total: {total:,} chars   budget ~= {budget:,} chars ({basis})")
+        overflow = total > budget
+        verdict = "fits" if not overflow else f"OVERFLOW x{total / budget:.1f} - expect silent name-only truncation"
+        print(f"verdict: {verdict}")
+        print(f"note: drop order is undocumented (#31505) - fit with margin; context window assumed {CONTEXT_TOKENS // 1000}k")
+    else:
+        print(f"descriptions total: {total:,} chars   budget: SKIPPED (non-CC harness, CLAUDECODE unset)")
+        print("verdict: budget check skipped - the 1%-of-context listing budget is a Claude Code")
+        print("         mechanism; Codex enforces its own 2%/8000-char budget internally, other")
+        print("         tools differ. Per-description cap and overlap are still checked below.")
 
     over_band = [(len(d), name, src) for name, src, d in every if len(d) > band]
     over_cap = [(len(d), name, src) for name, src, d in every if len(d) > PER_DESC_CAP_PORTABLE]
@@ -246,7 +260,7 @@ def main() -> int:
         for length, name, src in sorted(over_cap, reverse=True):
             print(f"  {length:5d}  {name}  ({src})")
     report_overlap(every, target, threshold)
-    return 0 if total <= budget else 1
+    return 1 if overflow else 0
 
 
 if __name__ == "__main__":
