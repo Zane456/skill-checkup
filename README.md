@@ -129,24 +129,26 @@ Everything below is lookup material. You don't need to read it to use the skill.
 
 | Step | Does | Output |
 | :--- | :--- | :--- |
-| 1 | Read the target SKILL.md; run `check_listing_budget.py` and `check_routes.py` | size + budget + routes verdicts |
+| 1 | Read the target SKILL.md; run `check_listing_budget.py`, `check_routes.py` and `check_script_safety.py` | size + budget + routes + safety verdicts |
 | 2 | `index.py` rosters every dimension (FORCED / DEFAULT / SKIP, plus a `MODE=` dispatch line); read the fired ones one file at a time | the roster + one receipt per dimension |
-| 2.5 | Dry-run: walk one prompt per task shape (write / revise / check) through the body | broken links + gates fired per prompt (any break → P0) |
+| 2.5 | Dry-run: walk one prompt per task shape (write / revise / check / restructure) through the body | broken links + gates fired per prompt (any break → P0) |
 | 2.6 | Live-injection: is the target's description actually injected this session, or dropped name-only | injected / dropped / skipped |
 | 3 | Print the P0→P3 diagnosis (❌ must fix · ⚠️ suggested · ✅ passed) | the report |
 | 4 | Apply fixes with Edit — only after you confirm | applied-fixes line |
 
 ### Bundled scripts
 
-No LLM and no third-party dependencies (except `eval_retrieval.py`, which calls a model on request).
+No LLM and no third-party dependencies (except `eval_retrieval.py --glm` and `glm_blind_audit.py`, which call a model on request).
 
 | Script | Checks | Command | Exit |
 | :--- | :--- | :--- | :--- |
 | `index.py` | measures the target and prints the dimension roster (FORCED / DEFAULT / SKIP with reasons) plus the `MODE=` dispatch line | `python3 scripts/index.py <skill_dir>` | 0 roster printed / 2 unreadable |
-| `check_routes.py` | reachability, orphans, dangling links, the compass cap (6000 chars, overridable via a `compass-cap:` frontmatter field); `--before <snapshot>` adds a content-conservation check | `python3 scripts/check_routes.py <skill_dir>` | 0 clean / 1 issues |
+| `check_routes.py` | reachability, orphans, dangling links, the compass cap (6000 chars, overridable via a `compass-cap:` frontmatter field); `--before <snapshot>` adds a content-conservation check | `python3 scripts/check_routes.py <skill_dir>` | 0 clean / 1 issues / 2 unavailable |
+| `check_script_safety.py` | scans bundled scripts and prose for risk patterns (exfiltration, destructive ops, persistence); detection is mechanical, conviction stays with the auditor | `python3 scripts/check_script_safety.py <skill_dir>` | 0 ran (hits are findings) / 2 unavailable |
 | `check_listing_budget.py` | total description chars vs the ~1%-of-context listing pool; lists every description over the 300-char band | `python3 scripts/check_listing_budget.py <root>` | 0 fits / 1 overflow / 2 unavailable |
 | `check_desc_slim.py` | flags descriptions that can be trimmed without losing trigger strength | `python3 scripts/check_desc_slim.py <skill_dir>` | 0 clean / 1 issues |
 | `eval_retrieval.py` | asks a model (GLM, 3× majority vote) whether the router can find each reference by its `when-to-read` scenario | `python3 scripts/eval_retrieval.py <skill_dir> --glm` | 0 clean / 1 misses |
+| `glm_blind_audit.py` | bundles the whole package into one cross-model (GLM) call for an independent blind second opinion | `python3 scripts/glm_blind_audit.py <skill_dir>` | 0 opinion printed / 2 no key or network |
 
 ### Hard rules
 
@@ -194,7 +196,9 @@ A defect gets a name so you can act on it precisely; the P-tier says how bad, th
 
 | Reference | Covers |
 | :--- | :--- |
-| `description-templates.md` | trigger-strength template + listing-budget math |
+| `description-templates.md` | trigger-strength template + routing distinctness |
+| `slimming-workflow.md` | global-pass slimming: budget ceiling, compression order, safety protocol |
+| `catalog-skill-pattern.md` | three-tier structure for bulk-payload skills |
 | `body-quality-checklist.md` | body size and what to demote into references |
 | `visible-output-rule.md` | every workflow step must print something |
 | `yaml-pitfalls.md` | frontmatter formatting traps |
@@ -223,6 +227,7 @@ skill-checkup/
 │   ├── apply-safety.md
 │   ├── assets-vs-references.md
 │   ├── body-quality-checklist.md
+│   ├── catalog-skill-pattern.md
 │   ├── description-templates.md
 │   ├── effect-dry-run.md
 │   ├── exception-fallback.md
@@ -235,6 +240,7 @@ skill-checkup/
 │   ├── priority-tiers.md
 │   ├── rationale.md
 │   ├── runtime-contract.md
+│   ├── slimming-workflow.md
 │   ├── structure-surgery.md
 │   ├── visible-output-rule.md
 │   └── yaml-pitfalls.md
@@ -243,7 +249,9 @@ skill-checkup/
 │   ├── check_routes.py                   # reachability / orphans / dangling / compass cap
 │   ├── check_listing_budget.py           # description listing-budget
 │   ├── check_desc_slim.py                # description slimming
-│   └── eval_retrieval.py                 # retrieval eval (model-backed)
+│   ├── check_script_safety.py            # risk-pattern scan of bundled scripts
+│   ├── eval_retrieval.py                 # retrieval eval (model-backed)
+│   └── glm_blind_audit.py                # cross-model blind second opinion
 ├── README.md
 ├── README.zh-CN.md
 └── LICENSE

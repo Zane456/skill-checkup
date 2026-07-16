@@ -129,24 +129,26 @@ python3 scripts/check_routes.py ~/.claude/skills/my-tool
 
 | 步骤 | 做什么 | 输出 |
 | :--- | :--- | :--- |
-| 1 | 读目标 SKILL.md;跑 `check_listing_budget.py` 和 `check_routes.py` | 体积 + 预算 + 路由三条结论 |
+| 1 | 读目标 SKILL.md;跑 `check_listing_budget.py`、`check_routes.py` 和 `check_script_safety.py` | 体积 + 预算 + 路由 + 安全四条结论 |
 | 2 | `index.py` 测量目标,给每个维度点名(FORCED / DEFAULT / SKIP,外加一行 `MODE=` 派发);命中的逐个文件读 | 点名清单 + 每个维度一行回执 |
-| 2.5 | Dry-run:每种任务形状(写 / 改 / 查)各拿一条 prompt 在 body 里走一遍 | 每条 prompt 的断链数与触发的门(有断链就 P0) |
+| 2.5 | Dry-run:每种任务形状(写 / 改 / 查 / 重构)各拿一条 prompt 在 body 里走一遍 | 每条 prompt 的断链数与触发的门(有断链就 P0) |
 | 2.6 | Live-injection:本会话目标的 description 是真注入了,还是被降成只剩名字 | injected / dropped / skipped |
 | 3 | 打出 P0→P3 诊断(❌ 必修 · ⚠️ 建议 · ✅ 通过) | 报告 |
 | 4 | 用 Edit 应用修复——只在你确认后 | 已修复行数 |
 
 ### 自带脚本
 
-无 LLM、无第三方依赖(`eval_retrieval.py` 除外,它按需调模型)。
+无 LLM、无第三方依赖(`eval_retrieval.py --glm` 和 `glm_blind_audit.py` 除外,它们按需调模型)。
 
 | 脚本 | 检查什么 | 命令 | 退出码 |
 | :--- | :--- | :--- | :--- |
 | `index.py` | 测量目标,打印维度点名(FORCED / DEFAULT / SKIP 带理由)和 `MODE=` 派发行 | `python3 scripts/index.py <skill_dir>` | 0 已点名 / 2 读不了 |
-| `check_routes.py` | 可达性、orphan、断链、compass 上限(默认 6000 字符,可用 frontmatter 的 `compass-cap:` 覆写);`--before <snapshot>` 加一道内容守恒检查 | `python3 scripts/check_routes.py <skill_dir>` | 0 干净 / 1 有问题 |
+| `check_routes.py` | 可达性、orphan、断链、compass 上限(默认 6000 字符,可用 frontmatter 的 `compass-cap:` 覆写);`--before <snapshot>` 加一道内容守恒检查 | `python3 scripts/check_routes.py <skill_dir>` | 0 干净 / 1 有问题 / 2 不可用 |
+| `check_script_safety.py` | 扫自带脚本和 prose 里的风险模式(外传、破坏性操作、持久化);检测是机械的,定罪归审计者 | `python3 scripts/check_script_safety.py <skill_dir>` | 0 已扫(命中算发现) / 2 不可用 |
 | `check_listing_budget.py` | description 总字符 vs 约占 1% 上下文的清单池;列出每个超 300 字符带的 description | `python3 scripts/check_listing_budget.py <root>` | 0 装得下 / 1 超出 / 2 不可用 |
 | `check_desc_slim.py` | 标出能瘦身、又不丢触发力的 description | `python3 scripts/check_desc_slim.py <skill_dir>` | 0 干净 / 1 有问题 |
 | `eval_retrieval.py` | 问模型(GLM,3 次多数投票)路由能不能凭 `when-to-read` 场景找到每个 reference | `python3 scripts/eval_retrieval.py <skill_dir> --glm` | 0 干净 / 1 有漏 |
+| `glm_blind_audit.py` | 把整个包打包进一次跨模型(GLM)调用,拿一份独立盲审第二意见 | `python3 scripts/glm_blind_audit.py <skill_dir>` | 0 意见已打印 / 2 无 key 或断网 |
 
 ### 硬规则
 
@@ -194,7 +196,9 @@ python3 scripts/check_routes.py ~/.claude/skills/my-tool
 
 | Reference | 管什么 |
 | :--- | :--- |
-| `description-templates.md` | 触发强度模板 + 清单预算算法 |
+| `description-templates.md` | 触发强度模板 + 路由区分度 |
+| `slimming-workflow.md` | 全局瘦身操作:预算上限、压缩顺序、安全协议 |
+| `catalog-skill-pattern.md` | 大批量载荷 skill 的三层目录结构 |
 | `body-quality-checklist.md` | body 体积、什么该挪进 references |
 | `visible-output-rule.md` | 每个流程步骤都得有输出 |
 | `yaml-pitfalls.md` | frontmatter 格式坑 |
@@ -223,6 +227,7 @@ skill-checkup/
 │   ├── apply-safety.md
 │   ├── assets-vs-references.md
 │   ├── body-quality-checklist.md
+│   ├── catalog-skill-pattern.md
 │   ├── description-templates.md
 │   ├── effect-dry-run.md
 │   ├── exception-fallback.md
@@ -235,6 +240,7 @@ skill-checkup/
 │   ├── priority-tiers.md
 │   ├── rationale.md
 │   ├── runtime-contract.md
+│   ├── slimming-workflow.md
 │   ├── structure-surgery.md
 │   ├── visible-output-rule.md
 │   └── yaml-pitfalls.md
@@ -243,7 +249,9 @@ skill-checkup/
 │   ├── check_routes.py                   # 可达性 / orphan / 断链 / compass 上限
 │   ├── check_listing_budget.py           # description 清单预算
 │   ├── check_desc_slim.py                # description 瘦身
-│   └── eval_retrieval.py                 # 召回评测(调模型)
+│   ├── check_script_safety.py            # 自带脚本风险模式扫描
+│   ├── eval_retrieval.py                 # 召回评测(调模型)
+│   └── glm_blind_audit.py                # 跨模型盲审第二意见
 ├── README.md
 ├── README.zh-CN.md
 └── LICENSE
