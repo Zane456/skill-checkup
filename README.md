@@ -4,7 +4,7 @@ English | [简体中文](README.zh-CN.md)
 
 # skill-checkup
 
-**The structure checkup for multi-file Claude skills — format linters check the file, this checks the architecture.**
+**Puts your skill's content where it belongs — split what should split, load on demand, keep the context lean.**
 
 ![Claude Skill](https://img.shields.io/badge/Claude-Skill-8A2BE2)
 ![Deterministic checks](https://img.shields.io/badge/checks-4%20deterministic-2ea44f)
@@ -91,7 +91,7 @@ Every check, threshold, and rule is listed in full under [Reference](#reference)
 
 ## What Makes It Different
 
-Most skill tools lint one file — frontmatter, naming, char counts. This one audits the architecture, because a real skill is not one file: it is SKILL.md plus a references/ library plus scripts/, and the failures that hurt live between those files.
+A real skill is a set of files: SKILL.md plus a references/ library plus scripts/. What this tool manages is where content lives — the main file holds the route, details split into references that say when to read them, and Claude loads a file only when the moment needs it, so the context never gets flooded. Bad placement fails silently: thousands of words dumped into the main file and re-read on every run, a reference that never gets loaded, a link pointing at a file that doesn't exist. Nothing errors. Format linters check one file; nobody covers content placement.
 
 1. **Audits the whole set, not one file.** The SKILL.md router, every reference behind it, and the scripts it ships are one audit target — structure findings (orphans, dangling routes, over-cap bodies) are first-class.
 2. **Routing is measured, not assumed.** Every reference carries a when-to-read scenario and keywords, everything must be reachable within 2 hops, and `eval_retrieval.py` tests whether the router can actually find each file from its scenario.
