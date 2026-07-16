@@ -1,6 +1,6 @@
 ---
 name: skill-checkup
-description: Skill quality + package structure expert. ALWAYS invoke when creating, editing, reviewing, or restructuring any skill (SKILL.md, references/, scripts/, routing, indexes), or on 审查/体检/修复/重构/拆分 skill. Do not modify or split a skill directly — use this skill first.
+description: Skill quality + package structure expert. ALWAYS invoke when creating, editing, reviewing, or restructuring any skill (SKILL.md, references/, scripts/, routing, indexes), when a skill won't trigger or is bloated, or on 审查/体检/修复/重构/拆分 skill、skill 不触发、太臃肿. Do not modify or split a skill directly — use this skill first.
 metadata:
   compass-cap: 7500
 ---
