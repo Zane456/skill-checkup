@@ -4,17 +4,17 @@
 
 # skill-checkup
 
-**给你的 Claude skill 做体检:让它真能触发、不臃肿、路由不断链。**
+**多文件 Claude skill 的结构体检——格式 linter 查单个文件,它查整套架构。**
 
 ![Claude Skill](https://img.shields.io/badge/Claude-Skill-8A2BE2)
 ![确定性检查](https://img.shields.io/badge/checks-4%20deterministic-2ea44f)
-![引用文件](https://img.shields.io/badge/references-18%20on--demand-blue)
+![引用文件](https://img.shields.io/badge/references-20%20on--demand-blue)
 ![运行依赖](https://img.shields.io/badge/runtime%20deps-none-success)
 ![Python](https://img.shields.io/badge/python-3-3776AB)
 
 一个审别的 skill 的 skill。机器能定的事——字符数、断链、清单预算——交给脚本和退出码定;需要判断的事——没用的指令、臃肿、模糊到没法执行的收尾条件——才留给人看。它报出的每个毛病都带名字和行号。
 
-[看它跑一遍](#看它跑一遍) · [快速上手](#快速上手) · [它能逮住什么](#它能逮住什么) · [怎么运作](#怎么运作) · [速查](#速查)
+[看它跑一遍](#看它跑一遍) · [快速上手](#快速上手) · [它能逮住什么](#它能逮住什么) · [它凭什么不一样](#它凭什么不一样) · [怎么运作](#怎么运作) · [速查](#速查)
 
 </div>
 
@@ -86,6 +86,21 @@ python3 scripts/check_routes.py ~/.claude/skills/my-tool
 | 一行什么都没做的指令 | 模型默认本来就会——`[no-op]` |
 
 每一项检查、阈值、规则,下面[速查](#速查)里全列了。
+
+---
+
+## 它凭什么不一样
+
+市面上的 skill 工具基本都在查单个文件——frontmatter、命名、字数。它查的是整套架构:真正的 skill 不是一个文件,是 SKILL.md + references/ + scripts/ 一整套,真正要命的毛病都藏在文件与文件之间。
+
+1. **按整套审,不按单文件审。** SKILL.md 路由器、它背后的每个 reference、附带的脚本是同一个审计对象——orphan、断链、超上限这些结构毛病是头等公民。
+2. **路由质量靠测量,不靠感觉。** 每个 reference 带使用场景和关键词,任何文件 2 跳内必须可达,`eval_retrieval.py` 实测"凭场景能不能把文件找回来"。
+3. **reference 按"错得无不无声"分类。** 查表用的、逐条过的、通读吸收的——判据一句话:跳过这个文件,失败是不是无声的?三类各配不同的强制手段。
+4. **拆分有规程。** 重组=逐字搬运,不许顺手改写;拆完跑守恒检查,随时可回滚。内容动完手术还是原来的内容。
+5. **大批量素材的 skill 有专门形态。** 装着几百个二进制/模板文件的 skill 用三层目录模式,187+112 个真实载荷上验证过。
+6. **审计开销随目标伸缩。** 脚本先测量目标,只点名用得上的维度;太重就拆给多个 agent 分头查。5 行的小 skill 和 90KB 的引用库,同样的严格,不同的成本。
+
+格式 linter 和它是互补不是对手:文件卫生交给前者,架构交给它。
 
 ---
 

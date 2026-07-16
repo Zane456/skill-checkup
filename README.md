@@ -4,17 +4,17 @@ English | [简体中文](README.zh-CN.md)
 
 # skill-checkup
 
-**Reviews your Claude skills so they actually trigger, stay lean, and route cleanly.**
+**The structure checkup for multi-file Claude skills — format linters check the file, this checks the architecture.**
 
 ![Claude Skill](https://img.shields.io/badge/Claude-Skill-8A2BE2)
 ![Deterministic checks](https://img.shields.io/badge/checks-4%20deterministic-2ea44f)
-![References](https://img.shields.io/badge/references-18%20on--demand-blue)
+![References](https://img.shields.io/badge/references-20%20on--demand-blue)
 ![Runtime deps](https://img.shields.io/badge/runtime%20deps-none-success)
 ![Python](https://img.shields.io/badge/python-3-3776AB)
 
 A skill that audits other skills. It settles the things a machine can settle — character counts, broken routes, listing budget — with scripts and exit codes, and saves your attention for the calls that need judgment: dead instructions, bloat, exit conditions too vague to act on. Every defect it reports has a name and a line number.
 
-[See it run](#see-it-run) · [Quick start](#quick-start) · [What it catches](#what-it-catches) · [How it works](#how-it-works) · [Reference](#reference)
+[See it run](#see-it-run) · [Quick start](#quick-start) · [What it catches](#what-it-catches) · [What makes it different](#what-makes-it-different) · [How it works](#how-it-works) · [Reference](#reference)
 
 </div>
 
@@ -86,6 +86,21 @@ The failures that don't announce themselves:
 | A line that does nothing | the model already obeyed it by default — `[no-op]` |
 
 Every check, threshold, and rule is listed in full under [Reference](#reference).
+
+---
+
+## What Makes It Different
+
+Most skill tools lint one file — frontmatter, naming, char counts. This one audits the architecture, because a real skill is not one file: it is SKILL.md plus a references/ library plus scripts/, and the failures that hurt live between those files.
+
+1. **Audits the whole set, not one file.** The SKILL.md router, every reference behind it, and the scripts it ships are one audit target — structure findings (orphans, dangling routes, over-cap bodies) are first-class.
+2. **Routing is measured, not assumed.** Every reference carries a when-to-read scenario and keywords, everything must be reachable within 2 hops, and `eval_retrieval.py` tests whether the router can actually find each file from its scenario.
+3. **References are classified by how they fail.** Lookup material, checklists, immersion reading — decided by one question: if this file were skipped, would the failure be silent? Each class gets a different enforcement.
+4. **Splitting has a protocol.** Restructuring is verbatim relocation — never trim or paraphrase while moving — with a conservation check after and a rollback path. Your content survives the surgery.
+5. **Bulk-payload skills get their own shape.** A three-tier catalog pattern for skills that carry hundreds of binaries or templates, production-tested on 187 + 112 payload files.
+6. **The audit scales with the target.** A script measures the skill first and rosters only the dimensions that apply; heavy targets fan out across agents. A 5-line skill and a 90 KB reference library get the same rigor at different cost.
+
+Format linters and this tool are complements, not rivals: run one for file hygiene, run this for the architecture.
 
 ---
 
