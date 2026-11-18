@@ -6,7 +6,7 @@ context window; CC issues #56710 / #47627). On overflow CC silently drops entire
 descriptions and keeps names only — a name-only skill cannot auto-trigger.
 This script measures the population so skill-checkup can judge one skill in context.
 
-Usage: python3 check_listing_budget.py [project_root] [--target <skill>] [--threshold 0.40]
+Usage: python3 check_listing_budget.py [project_root] [--target <skill_dir | skill_name>] [--threshold 0.40]
 Exit:  0 = fits budget, OR budget skipped (non-CC harness) — overlap/cap still reported
        1 = OVERFLOW (this is a finding — use the printed numbers, do not treat as error)
        2 = nothing found / script error (only this exit means "budget unavailable")
@@ -17,7 +17,14 @@ stopwords removed. Pairs >= threshold are the collision surface — the router
 sees every description at once, so two descriptions sharing their distinctive
 keywords are ambiguous even when each is individually well-written. Pairs
 involving --target are the audited skill's P2 candidates; all other pairs are
-population NOTICEs. Overlap never affects the exit code.
+population NOTICEs. Overlap never affects the exit code. Pass the skill DIRECTORY
+as --target: the audited copy's description is the one measured. An installed
+copy (also through a symlink) is measured from its pool entry; a working copy of
+an installed skill (draft, snapshot, repo checkout - matched by folder name or
+frontmatter name) replaces that one installed skill entry in place; a skill
+installed nowhere joins the overlap pass. Same-name entries in other pools and
+same-name commands stay: they are real collisions. A bare name found in no pool
+prints NOT measured instead of a count.
 
 Harness gate: the budget estimate below is a Claude-Code-only mechanism. When
 CLAUDECODE is unset (Codex, Gemini, other tools) the budget section is SKIPPED —
@@ -89,8 +96,12 @@ def desc_tokens(desc: str) -> set:
     return toks
 
 
-def report_overlap(every: list, target: str | None, threshold: float) -> None:
+def report_overlap(every: list, target: str | None, threshold: float,
+                   key: tuple | None = None, warn: str | None = None) -> None:
+    """key = (name, pool) of the audited entry; only pairs containing it count as the target's."""
     print(f"\n== description overlap (routing distinctness) ==")
+    if warn:
+        print(f"WARNING: {warn}")
     entries = [(n, s, t) for n, s, t in
                ((name, src, desc_tokens(d)) for name, src, d in every)
                if len(t) >= OVERLAP_MIN_TOKENS]
@@ -110,12 +121,13 @@ def report_overlap(every: list, target: str | None, threshold: float) -> None:
         n_target = 0
         for coeff, n1, s1, n2, s2, inter in sorted(pairs, key=lambda p: (-p[0], p[1], p[3])):
             mark = ""
-            if target and target in (n1, n2):
+            if key and key in ((n1, s1), (n2, s2)):
                 mark, n_target = "  *TARGET*", n_target + 1
             shared = ", ".join(sorted(inter)[:8])
             print(f"  {coeff:.2f}  {n1} ({s1}) <-> {n2} ({s2}){mark}   shared: {shared}")
         print(f"pairs >= {threshold:.2f}: {len(pairs)}"
-              + (f" ({n_target} involving target {target})" if target else ""))
+              + ((f" ({n_target} involving target {target})" if key
+                  else f" (target {target} NOT measured)") if target else ""))
     print("note: overlap = collision surface, not a verdict - intentional siblings are judged for intent;")
     print("      pairs involving the audited target = P2 candidates, all others = population NOTICE (never auto-edit)")
 
@@ -138,7 +150,22 @@ def read_desc(md_file: Path) -> str | None:
     return re.sub(r"\s+", " ", val).strip()
 
 
-def collect_skills(root: Path, patterns: list[str]) -> dict[str, str]:
+def read_name(md_file: Path) -> str | None:
+    """Frontmatter name: - a folder may be named differently (folder docx-new, name docx)."""
+    try:
+        text = md_file.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return None
+    m = re.match(r"^---\s*\n(.*?)\n---", text, re.S)
+    n = m and re.search(r"^name:\s*[\"']?([^\"'\n]+?)[\"']?\s*$", m.group(1), re.M)
+    return n.group(1).strip() if n else None
+
+
+# (folder name, pool) -> resolved SKILL.md path and frontmatter name, for --target <dir>
+SKILL_FILES: dict[tuple[str, str], tuple[Path, str | None]] = {}
+
+
+def collect_skills(root: Path, patterns: list[str], pool: str) -> dict[str, str]:
     out: dict[str, str] = {}
     for pat in patterns:
         try:
@@ -146,9 +173,49 @@ def collect_skills(root: Path, patterns: list[str]) -> dict[str, str]:
                 desc = read_desc(f)
                 if desc is not None:
                     out[f.parent.name] = desc
+                    SKILL_FILES[(f.parent.name, pool)] = (f.resolve(), read_name(f))
         except OSError:
             continue
     return out
+
+
+def place_target(every: list, target: str, target_dir: Path | None):
+    """Put the audited copy into the overlap pool.
+
+    Returns (pool, key, note, warn): key = the (name, pool) entry that is the audited
+    skill, None when it could not be measured (warn says why).
+    """
+    skills = [(n, s) for n, s, _ in every if s != "commands"]
+    if target_dir is None:                                   # bare name: folder, then frontmatter name
+        hit = (next((k for k in skills if k[0] == target), None)
+               or next((k for k in skills if SKILL_FILES[k][1] == target), None)
+               or next(((n, s) for n, s, _ in every if n == target), None))
+        return every, hit, None, None if hit else (
+            f"target {target!r} is in no scanned pool - overlap with the target was NOT measured; "
+            "pass the skill directory as --target")
+    md = target_dir / "SKILL.md"
+    tdesc = read_desc(md)
+    if tdesc is None:
+        why = "has no parseable description" if md.is_file() else "does not exist"
+        return every, None, None, f"{md} {why} - overlap with the target was NOT measured"
+    real = md.resolve()
+    for k in skills:                                         # the installed file itself / via symlink
+        if SKILL_FILES[k][0] == real:
+            return every, k, None, None
+    fm, folder = read_name(md), target_dir.name              # a working copy of an installed skill:
+    def rank(k):                                             # both names > frontmatter name > folder name
+        names = (k[0], SKILL_FILES[k][1])
+        return (3 if (folder, fm) == names else 2 if fm and fm in names
+                else 1 if folder in names else 0)
+    k = max(skills, key=rank, default=None)                  # ties keep pool order
+    if k and rank(k):
+        pool = [(n, s, tdesc if (n, s) == k else d) for n, s, d in every]
+        return pool, k, (f"note: target {folder} is a working copy of installed {k[0]} ({k[1]}) - "
+                         "its description replaces that entry in the overlap pass only"), None
+    k = (fm or target_dir.name, "audited")
+    return every + [(k[0], k[1], tdesc)], k, (
+        f"note: target {k[0]} is installed in no scanned pool - its description joins "
+        "the overlap pass only (budget total above excludes it)"), None
 
 
 def collect_commands(cmd_dir: Path) -> dict[str, str]:
@@ -193,18 +260,24 @@ def main() -> int:
         else:
             pos.append(argv[i])
             i += 1
+    # --target may be the audited skill's directory (preferred) or a bare name
+    # a path (has a slash, or starts with ~ or .) is a directory; anything else is a name
+    target_dir = None
+    if target and ("/" in target or os.sep in target or target.startswith(("~", "."))):
+        target_dir = Path(os.path.abspath(os.path.expanduser(target)))  # keeps a symlink's own name
+        target = target_dir.name
     # project_root is kept for settings lookup even when it has no .claude/skills
     project_root = Path(pos[0]).resolve() if pos else Path.cwd()
 
-    glob_skills = collect_skills(HOME / ".claude" / "skills", ["*/SKILL.md"])
-    proj_skills = collect_skills(project_root / ".claude" / "skills", ["*/SKILL.md"])
+    glob_skills = collect_skills(HOME / ".claude" / "skills", ["*/SKILL.md"], "global")
+    proj_skills = collect_skills(project_root / ".claude" / "skills", ["*/SKILL.md"], "project")
     if not (project_root / ".claude" / "skills").is_dir():
         print(f"WARNING: no .claude/skills under {project_root} - project pool counted as 0 "
               "(mistyped path? verdict below may undercount)", file=sys.stderr)
     plugin_cache = HOME / ".claude" / "plugins" / "cache"
     plug_skills = collect_skills(plugin_cache,
                                  ["*/skills/*/SKILL.md", "*/*/skills/*/SKILL.md",
-                                  "*/*/*/skills/*/SKILL.md", "*/*/*/*/skills/*/SKILL.md"])
+                                  "*/*/*/skills/*/SKILL.md", "*/*/*/*/skills/*/SKILL.md"], "plugin")
     if plugin_cache.is_dir() and any(plugin_cache.iterdir()) and not plug_skills:
         print("WARNING: plugin cache is non-empty but 0 plugin SKILL.md matched - layout changed, plugin pool uncounted", file=sys.stderr)
 
@@ -259,7 +332,13 @@ def main() -> int:
         print(f"over per-description cap {PER_DESC_CAP_PORTABLE} (portable) / {PER_DESC_CAP_CC} (CC):")
         for length, name, src in sorted(over_cap, reverse=True):
             print(f"  {length:5d}  {name}  ({src})")
-    report_overlap(every, target, threshold)
+    overlap_pool, key, warn = every, None, None
+    if target:
+        overlap_pool, key, note, warn = place_target(every, target, target_dir)
+        target = key[0] if key else target
+        if note:
+            print("\n" + note)
+    report_overlap(overlap_pool, target, threshold, key, warn)
     return 1 if overflow else 0
 
 

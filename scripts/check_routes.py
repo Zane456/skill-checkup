@@ -5,7 +5,9 @@ No LLM, no third-party dependencies. Checks:
   1. Reachability  — every route/link in SKILL.md and indexes resolves to a real
                      file (and #anchor) ; nothing dangles.
   2. Orphans       — every file under references/ scripts/ assets/ is reachable
-                     from SKILL.md by following links.
+                     from SKILL.md by following links; a Python module
+                     statically imported by a reachable script under scripts/
+                     is reachable too (listed in the output).
   3. Compass cap   — SKILL.md <= 6000 chars.
   4. Conservation  — with --before <snapshot>, every substantive original line
                      still exists somewhere in the new doc set (split = verbatim
@@ -20,6 +22,7 @@ report per exception-fallback.md, never invent a verdict).
 """
 
 import argparse
+import ast
 import fnmatch
 import re
 import sys
@@ -126,6 +129,70 @@ def walk_support_files(root: Path):
     return files
 
 
+def py_import_targets(py: Path, root: Path) -> set:
+    """Files inside the skill that a Python script imports (static import statements).
+
+    Module names resolve against the importing file's folder, the skill's
+    scripts/ folder (where entry scripts put themselves on sys.path) and the
+    skill root (`python -m scripts.x` style); relative imports resolve against
+    the package folder. Unparseable files import nothing.
+    """
+    try:
+        tree = ast.parse(py.read_bytes())   # bytes: honours a PEP 263 coding line
+    except (OSError, SyntaxError, UnicodeDecodeError, ValueError,
+            RecursionError, MemoryError):   # a pathological file must not crash the check
+        return set()
+    bases = [py.parent]
+    for b in (root / "scripts", root):
+        if b.is_dir() and b.resolve() not in [x.resolve() for x in bases]:
+            bases.append(b.resolve())
+    wanted = []                                   # (base folders, dotted module name)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            wanted += [(bases, a.name) for a in node.names]
+        elif isinstance(node, ast.ImportFrom):
+            if node.level:
+                pkg = py.parent
+                for _ in range(node.level - 1):
+                    pkg = pkg.parent
+                where = [pkg]
+            else:
+                where = bases
+            if node.module:
+                wanted.append((where, node.module))
+            # `from pkg import mod` may name a submodule file
+            wanted += [(where, f"{node.module}.{a.name}" if node.module else a.name)
+                       for a in node.names if a.name != "*"]
+    found = set()
+    for where, dotted in wanted:
+        parts = dotted.split(".")
+        for base in where:
+            cur = base
+            for i, part in enumerate(parts):
+                cur = cur / part
+                if (cur / "__init__.py").is_file():
+                    found.add((cur / "__init__.py").resolve())
+                if i == len(parts) - 1 and cur.with_name(part + ".py").is_file():
+                    found.add(cur.with_name(part + ".py").resolve())
+    root_r = root.resolve()
+    return {f for f in found if root_r in f.parents}
+
+
+def has_main_block(py: Path) -> bool:
+    """True if the module has a top-level `if __name__ == "__main__":` statement."""
+    try:
+        tree = ast.parse(py.read_bytes())
+    except (OSError, SyntaxError, ValueError, RecursionError, MemoryError):
+        return False
+    for node in tree.body:
+        if isinstance(node, ast.If) and isinstance(node.test, ast.Compare) and len(node.test.ops) == 1:
+            sides = [node.test.left, node.test.comparators[0]]
+            if (any(isinstance(s, ast.Name) and s.id == "__name__" for s in sides)
+                    and any(isinstance(s, ast.Constant) and s.value == "__main__" for s in sides)):
+                return True
+    return False
+
+
 def check_reachability_and_orphans(root: Path):
     issues = []
     skill_md = root / "SKILL.md"
@@ -189,6 +256,31 @@ def check_reachability_and_orphans(root: Path):
                     issues.append(f"[dangling-anchor] {rel(cur, root)} -> {raw} (no such heading in target)")
             if target.suffix == ".md" and target not in seen_md:
                 queue.append(target)
+
+    # Python imports: a module imported by a reachable script under scripts/ is
+    # reachable - Python loads it whenever the routed entry script runs, so the
+    # model never needs a route to it (route the entry script, not its internals).
+    # Each module cleared this way is listed; one with its own __main__ block may
+    # also be a command the model must find - the auditor judges those.
+    scripts_dir = (root / "scripts").resolve()
+    py_queue = [p for p in reachable if p.suffix == ".py" and scripts_dir in p.resolve().parents]
+    seen_py, via_import = set(), []
+    while py_queue:
+        cur = py_queue.pop()
+        if cur in seen_py:
+            continue
+        seen_py.add(cur)
+        for t in py_import_targets(cur, root):
+            if t not in reachable:
+                reachable.add(t)
+                via_import.append(t)
+            py_queue.append(t)
+    if via_import:
+        print(f"  imports: {len(via_import)} module(s) reachable through Python imports of reachable scripts:")
+        for t in sorted(via_import):
+            main = has_main_block(t)
+            print(f"    {t.relative_to(root.resolve())}"
+                  + ("  (has a __main__ block - if the model runs it directly, route it)" if main else ""))
 
     # orphans: support files never reached
     exempted = 0

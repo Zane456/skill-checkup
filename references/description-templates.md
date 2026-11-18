@@ -62,7 +62,7 @@ when writing a brand-new description.
 
 Trigger failure has a second axis besides this skill's own text: **collision with sibling descriptions**. The router sees every installed description at once, so two descriptions sharing their distinctive keywords are ambiguous even when each is individually well-written (community data: lov-alt/skill-distill reports routing accuracy ~49% under overlapping descriptions, ~74% after differentiation — their own benchmark, treat as indicative).
 
-- Measured mechanically on every audit: `scripts/check_listing_budget.py "<project_root>" --target <name>` prints pairwise overlap coefficient (|A∩B|/min(|A|,|B|), latin words + CJK bigrams, scaffolding stopwords removed; default threshold 0.40, `--threshold` to tune).
+- Measured mechanically on every audit: `scripts/check_listing_budget.py "<project_root>" --target "<skill_dir>"` prints pairwise overlap coefficient (|A∩B|/min(|A|,|B|), latin words + CJK bigrams, scaffolding stopwords removed; default threshold 0.40, `--threshold` to tune).
 - **Pairs involving the audited skill = P2.** Fix by sharpening each side's first-50-chars distinctive keywords, or by an explicit priority clause naming the sibling ("prefer X for domain Y" prose in whichever description should win).
 - **Pairs not involving it = population NOTICE** — report, never edit either side on this audit's initiative.
 - **Intentional siblings are legitimate** (paired tools, families with declared priority prose). Overlap is a collision *surface*, not a verdict — judge intent before tiering. A flagged sibling also supplies the best should-NOT-trigger prompt for the negative dry-run (`effect-dry-run.md` §negative).

@@ -21,11 +21,11 @@ Diagnose and improve any SKILL.md. **A compass, not a manual** — standards liv
 ### Step 1: Read the target, run the three checkers
 
 **Create shape (no target exists yet)** → hand drafting to `skill-creator`, print `[skill-checkup] create: no target — drafting → skill-creator, checkup resumes on the draft`, and resume here once the draft lands.
-Read the target SKILL.md in full, then run the three checkers via `python3 <this-skill-dir>/scripts/…` (quote paths — spaces are common): `check_listing_budget.py "<project_root>" --target "<skill_name>"`, `check_routes.py "<skill_dir>"`, `check_script_safety.py "<skill_dir>"`. All three run EVERY audit; compass-cap/dangling/orphan hits = P1. Print five lines:
+Read the target SKILL.md in full, then run the three checkers via `python3 <this-skill-dir>/scripts/…` (quote paths — spaces are common): `check_listing_budget.py "<project_root>" --target "<skill_dir>"`, `check_routes.py "<skill_dir>"`, `check_script_safety.py "<skill_dir>"`. All three run EVERY audit; compass-cap/dangling/orphan hits = P1. Print five lines:
 ```
 [skill-checkup] Auditing: <path>  body=<N> lines  description=<M> chars
 [skill-checkup] Budget: <K> skills installed, descriptions <T> chars vs ≈<B> → <fits | OVERFLOW ×N.N>
-[skill-checkup] Overlap: <clean | N pair(s), M with target>
+[skill-checkup] Overlap: <clean | N pair(s), M with target | target NOT measured>
 [skill-checkup] Routes: <PASS | N issue(s): compass-over/dangling/orphan>
 [skill-checkup] Safety: <clean | N hit(s): <classes>>
 ```

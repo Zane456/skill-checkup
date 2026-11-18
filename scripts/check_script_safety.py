@@ -191,6 +191,8 @@ def iter_files(root: Path):
         rel = f.relative_to(root)
         if any(p.startswith(".") or p == "__pycache__" for p in rel.parts):
             continue
+        if rel.parts[0] == "evolve" and (root / "evolve" / "state.json").is_file():
+            continue  # skill-evolution-in-use data: session records + stored versions, never run
         if f.suffix == ".md":
             yield f, "prose"
         elif f.suffix in CODE_EXT or (f.parent.name == "scripts" and f.suffix == ""):

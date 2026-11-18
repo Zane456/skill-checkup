@@ -158,9 +158,9 @@ python3 scripts/check_routes.py ~/.claude/skills/my-tool
 | 脚本 | 检查什么 | 命令 | 退出码 |
 | :--- | :--- | :--- | :--- |
 | `index.py` | 测量目标,打印维度点名(FORCED / DEFAULT / SKIP 带理由)和 `MODE=` 派发行 | `python3 scripts/index.py <skill_dir>` | 0 已点名 / 2 读不了 |
-| `check_routes.py` | 可达性、orphan、断链、compass 上限(默认 6000 字符,可用 frontmatter 的 `compass-cap:` 覆写);`--before <snapshot>` 加一道内容守恒检查 | `python3 scripts/check_routes.py <skill_dir>` | 0 干净 / 1 有问题 / 2 不可用 |
+| `check_routes.py` | 可达性、orphan(被可达脚本 import 的 Python 模块也算可达)、断链、compass 上限(默认 6000 字符,可用 frontmatter 的 `compass-cap:` 覆写);`--before <snapshot>` 加一道内容守恒检查 | `python3 scripts/check_routes.py <skill_dir>` | 0 干净 / 1 有问题 / 2 不可用 |
 | `check_script_safety.py` | 扫自带脚本和 prose 里的风险模式(外传、破坏性操作、持久化);检测是机械的,定罪归审计者 | `python3 scripts/check_script_safety.py <skill_dir>` | 0 已扫(命中算发现) / 2 不可用 |
-| `check_listing_budget.py` | description 总字符 vs 约占 1% 上下文的清单池;列出每个超 300 字符带的 description | `python3 scripts/check_listing_budget.py <root>` | 0 装得下 / 1 超出 / 2 不可用 |
+| `check_listing_budget.py` | description 总字符 vs 约占 1% 上下文的清单池;列出每个超 300 字符带的 description;列出 description 重叠的 skill 对,并标出被审 skill 的那几对 | `python3 scripts/check_listing_budget.py <root> --target <skill_dir>` | 0 装得下 / 1 超出 / 2 不可用 |
 | `check_desc_slim.py` | 标出能瘦身、又不丢触发力的 description | `python3 scripts/check_desc_slim.py <skill_dir>` | 0 干净 / 1 有问题 |
 | `eval_retrieval.py` | 问模型(GLM,3 次多数投票)路由能不能凭 `when-to-read` 场景找到每个 reference | `python3 scripts/eval_retrieval.py <skill_dir> --glm` | 0 干净 / 1 有漏 |
 | `glm_blind_audit.py` | 把整个包打包进一次跨模型(GLM)调用,拿一份独立盲审第二意见 | `python3 scripts/glm_blind_audit.py <skill_dir>` | 0 意见已打印 / 2 无 key 或断网 |
