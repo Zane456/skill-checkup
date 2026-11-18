@@ -65,7 +65,9 @@ evidence the *skill* is too big — split the skill, don't deepen the tree.
    SKILL.md, no orphans. A Python module statically imported by a reachable script under
    `scripts/` is reachable (check_routes.py follows those imports and lists them): route
    the entry script the model runs; its imported modules need neither a route nor an
-   exemption, unless the model also runs one directly. Bulk payload dirs
+   exemption, unless the model also runs one directly. Imports resolve from the script's
+   folder, `scripts/` and the skill root; a module found only through a `sys.path` change
+   still needs a route or an exemption. Bulk payload dirs
    (template/asset catalogs, machine data) may be exempted from the orphan walk via
    frontmatter `routes-exempt: <globs>` (read by check_routes.py, skip count printed —
    keep the list short and payload-only; never exempt rule references or scripts the

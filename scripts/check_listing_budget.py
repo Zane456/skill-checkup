@@ -105,6 +105,10 @@ def report_overlap(every: list, target: str | None, threshold: float,
     entries = [(n, s, t) for n, s, t in
                ((name, src, desc_tokens(d)) for name, src, d in every)
                if len(t) >= OVERLAP_MIN_TOKENS]
+    if key and key not in {(n, s) for n, s, _ in entries}:
+        print(f"WARNING: target {key[0]!r} has fewer than {OVERLAP_MIN_TOKENS} distinctive words in its "
+              "description - overlap with the target was NOT measured")
+        key = None
     pairs = []
     for i, (n1, s1, t1) in enumerate(entries):
         for n2, s2, t2 in entries[i + 1:]:

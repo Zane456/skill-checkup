@@ -147,6 +147,7 @@ def py_import_targets(py: Path, root: Path) -> set:
         if b.is_dir() and b.resolve() not in [x.resolve() for x in bases]:
             bases.append(b.resolve())
     wanted = []                                   # (base folders, dotted module name)
+    inits = set()                                 # a relative import loads its package first
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             wanted += [(bases, a.name) for a in node.names]
@@ -156,6 +157,8 @@ def py_import_targets(py: Path, root: Path) -> set:
                 for _ in range(node.level - 1):
                     pkg = pkg.parent
                 where = [pkg]
+                if (pkg / "__init__.py").is_file():
+                    inits.add((pkg / "__init__.py").resolve())
             else:
                 where = bases
             if node.module:
@@ -163,10 +166,15 @@ def py_import_targets(py: Path, root: Path) -> set:
             # `from pkg import mod` may name a submodule file
             wanted += [(where, f"{node.module}.{a.name}" if node.module else a.name)
                        for a in node.names if a.name != "*"]
-    found = set()
+    found = set(inits)
     for where, dotted in wanted:
         parts = dotted.split(".")
-        for base in where:
+        # like sys.path: the first folder holding the top-level name wins
+        # (module or regular package before a namespace folder)
+        top = [b for b in where if (b / (parts[0] + ".py")).is_file()
+               or (b / parts[0] / "__init__.py").is_file()]
+        top = top or [b for b in where if (b / parts[0]).is_dir()]
+        for base in top[:1]:
             cur = base
             for i, part in enumerate(parts):
                 cur = cur / part
